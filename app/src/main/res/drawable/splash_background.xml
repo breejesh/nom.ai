@@ -6,7 +6,7 @@
     </item>
     <!-- Centered Logo Icon -->
     <item
-        android:drawable="@drawable/ic_launcher"
+        android:drawable="@drawable/ic_app_icon"
         android:gravity="center"
         android:width="128dp"
         android:height="128dp" />

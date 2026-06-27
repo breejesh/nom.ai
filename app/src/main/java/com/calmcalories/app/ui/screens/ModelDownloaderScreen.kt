@@ -61,14 +61,10 @@ fun ModelDownloaderScreen(
         verticalArrangement = Arrangement.Center,
     ) {
         Box(
-            modifier = Modifier
-                .size(64.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .background(Emerald.copy(alpha = 0.08f))
-                .border(0.5.dp, Emerald.copy(alpha = 0.2f), RoundedCornerShape(20.dp)),
+            modifier = Modifier.size(64.dp),
             contentAlignment = Alignment.Center,
         ) {
-            Box(modifier = Modifier.size(44.dp), contentAlignment = Alignment.Center) {
+            Box(modifier = Modifier.size(56.dp), contentAlignment = Alignment.Center) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_logo_base),
                     contentDescription = null,

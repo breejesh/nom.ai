@@ -3,6 +3,7 @@
 </p>
 
 <h1 align="center">NomAI</h1>
+<p align="center"><strong>World's First Free & Open-Source Offline LLM Calorie Tracker</strong></p>
 
 <p align="center">
   <strong>A quiet-luxury, privacy-first, offline-local AI calorie advisor for Android.</strong><br>
@@ -19,7 +20,14 @@
 
 ---
 
-NomAI helps you track nourishment and stay in your optimal calorie zone without intrusive popups, subscription walls, or data leaks. Powered by Google's local **Gemma-2B** models, all nutrition extraction and vision scanning run entirely on your phone.
+### 🛡️ Why NomAI?
+
+Most calorie tracking apps are bloated, demand monthly subscriptions, show intrusive ads, and sell your private eating habits to third-party ad networks.
+
+**NomAI is the antidote.** It is built on three core pillars:
+- 💡 **100% Free & Open-Source (FOSS):** No payment gateways, no locked features, no premium tiers. Free forever.
+- 🔒 **Local & Offline-First:** Powered by Google's on-device **Gemma-2B** models. All meal text analysis and vision scanning run entirely inside your phone. No internet connection needed, and zero data ever leaves your device.
+- 🔑 **Zero Logins, Zero Tracking:** No sign-up forms, no email collection, no cookies. Just open the app and start tracking.
 
 ---
 

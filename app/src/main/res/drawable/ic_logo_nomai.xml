@@ -5,7 +5,7 @@
     android:viewportHeight="24">
     <!-- Bowl (Food/Nom) -->
     <path
-        android:fillColor="#1D1916"
+        android:fillColor="@color/logo_primary"
         android:pathData="M7,12C7,14.76 9.24,17 12,17C14.76,17 17,14.76 17,12C17,11.45 16.55,11 16,11C15.45,11 15,11.45 15,12C15,13.66 13.66,15 12,15C10.34,15 9,13.66 9,12C9,11.45 8.55,11 8,11C7.45,11 7,11.45 7,12Z" />
     <!-- Leaf (Eucalyptus/Healthy) -->
     <path
@@ -13,6 +13,6 @@
         android:pathData="M12,8C10,8 9.5,10.5 10.5,12C11.5,13.5 13,13.5 13.5,12C14,10.5 14,8 12,8Z" />
     <!-- AI Sparkle (Intelligence/NomAI) -->
     <path
-        android:fillColor="#1D1916"
+        android:fillColor="@color/logo_primary"
         android:pathData="M16.5,5L17.2,6.8L19,7.5L17.2,8.2L16.5,10L15.8,8.2L14,7.5L15.8,6.8Z" />
 </vector>

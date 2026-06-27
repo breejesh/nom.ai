@@ -136,7 +136,7 @@ fun HomeScreen(
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Box(
                         modifier = Modifier
-                            .size(36.dp)
+                            .size(40.dp)
                             .clip(RoundedCornerShape(10.dp))
                             .background(Emerald.copy(alpha = 0.08f))
                             .border(0.5.dp, Emerald.copy(alpha = 0.2f), RoundedCornerShape(10.dp)),
@@ -146,7 +146,7 @@ fun HomeScreen(
                             painter = painterResource(id = R.drawable.ic_logo_nomai),
                             contentDescription = null,
                             tint = Color.Unspecified,
-                            modifier = Modifier.size(22.dp)
+                            modifier = Modifier.size(28.dp)
                         )
                     }
                     Column {

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- NomAI Logo element colors - Light Mode -->
+    <color name="logo_primary">#1D1916</color>
+</resources>

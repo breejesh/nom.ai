@@ -1,6 +1,7 @@
 # Built artifacts
 **/build/
 build/
+app/build/
 
 # Gradle files
 .gradle/

@@ -3,7 +3,6 @@ package com.calmcalories.app.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,6 +35,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import com.calmcalories.app.model.MealEntry
 import com.calmcalories.app.ui.components.DateNavBtn
 import com.calmcalories.app.ui.components.StatCard
@@ -61,6 +62,7 @@ fun StatsScreen(meals: List<MealEntry>, dailyGoal: Int) {
     var viewMode by remember { mutableStateOf(ViewMode.Month) }
     var currentEpoch by remember { mutableStateOf(System.currentTimeMillis()) }
     var selectedParam by remember { mutableStateOf(StatsParam.Calories) }
+    var isDropdownExpanded by remember { mutableStateOf(false) }
 
     val currentTarget = remember(selectedParam, dailyGoal) { getTargetFor(selectedParam, dailyGoal) }
 
@@ -75,19 +77,35 @@ fun StatsScreen(meals: List<MealEntry>, dailyGoal: Int) {
     }
     val avgVal = remember(daySummaries) { daySummaries.values.filter { it > 0 }.let { if (it.isEmpty()) 0 else it.sum() / it.size } }
 
-    val ratio = avgVal.toFloat() / currentTarget.toFloat()
+    val ratio = if (currentTarget == 0) 0f else avgVal.toFloat() / currentTarget.toFloat()
 
-    val statusColor = when (selectedParam) {
-        StatsParam.Calories -> if (ratio > 1f) BrandRed else if (ratio >= 0.8f) Emerald else Amber
-        StatsParam.Protein -> Emerald
-        StatsParam.Carbs -> Amber
-        StatsParam.Fat -> BrandRed
-        StatsParam.Sugar -> if (ratio > 1f) BrandRed else if (ratio >= 0.8f) Amber else Emerald
-    }
-
-    val statusLabel = when (selectedParam) {
-        StatsParam.Sugar -> if (ratio > 1f) "High Sugar" else if (ratio >= 0.8f) "Warning" else "Low Sugar"
-        else -> if (ratio > 1f) "Cap Reached" else if (ratio >= 0.8f) "Optimal" else "Replenishing"
+    // Scientific evaluation rules for all parameters
+    val (statusColor, statusLabel) = when (selectedParam) {
+        StatsParam.Calories -> when {
+            ratio > 1f -> BrandRed to "Cap Reached"
+            ratio >= 0.8f -> Emerald to "Optimal"
+            else -> Amber to "Replenishing"
+        }
+        StatsParam.Protein -> when {
+            ratio > 1.2f -> BrandRed to "High Intake"
+            ratio >= 0.8f -> Emerald to "Optimal"
+            else -> Amber to "Replenishing"
+        }
+        StatsParam.Carbs -> when {
+            ratio > 1.0f -> BrandRed to "Cap Reached"
+            ratio >= 0.8f -> Emerald to "Optimal"
+            else -> Amber to "Replenishing"
+        }
+        StatsParam.Fat -> when {
+            ratio > 1.0f -> BrandRed to "Cap Reached"
+            ratio >= 0.8f -> Emerald to "Optimal"
+            else -> Amber to "Replenishing"
+        }
+        StatsParam.Sugar -> when {
+            ratio > 1.0f -> BrandRed to "High Sugar"
+            ratio >= 0.8f -> Amber to "Warning"
+            else -> Emerald to "Low Sugar"
+        }
     }
 
     Column(
@@ -105,30 +123,75 @@ fun StatsScreen(meals: List<MealEntry>, dailyGoal: Int) {
             }
         }
 
-        // ── Parameter Selection horizontal chips row ──
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            StatsParam.entries.forEach { param ->
-                val active = selectedParam == param
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(if (active) BrandDark else BrandCard)
-                        .border(0.5.dp, Divider, RoundedCornerShape(12.dp))
-                        .clickable { selectedParam = param }
-                        .padding(vertical = 8.dp, horizontal = 14.dp)
+        // ── Custom Dropdown Parameter Selector ──
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(BrandCard)
+                    .border(0.5.dp, Divider, RoundedCornerShape(16.dp))
+                    .clickable { isDropdownExpanded = !isDropdownExpanded }
+                    .padding(vertical = 12.dp, horizontal = 16.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text("VIEWING METRIC", fontSize = 8.sp, fontWeight = FontWeight.Black, color = TextMuted, letterSpacing = 1.5.sp)
+                    Text(selectedParam.label.uppercase(), fontSize = 14.sp, fontWeight = FontWeight.Bold, color = BrandDark)
+                }
+                Text(if (isDropdownExpanded) "▲" else "▼", fontSize = 10.sp, color = TextMuted)
+            }
+            
+            if (isDropdownExpanded) {
+                Popup(
+                    alignment = Alignment.TopCenter,
+                    onDismissRequest = { isDropdownExpanded = false },
+                    properties = PopupProperties(focusable = true)
                 ) {
-                    Text(
-                        param.label.uppercase(),
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = if (active) Color.White else TextMuted,
-                        letterSpacing = 1.sp
-                    )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp)
+                            .padding(top = 58.dp) // shift overlay below trigger card
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(BrandCard)
+                            .border(0.5.dp, Divider, RoundedCornerShape(16.dp))
+                            .padding(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        StatsParam.entries.forEach { param ->
+                            val isSelected = selectedParam == param
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(if (isSelected) BrandSurface else Color.Transparent)
+                                    .clickable { 
+                                        selectedParam = param
+                                        isDropdownExpanded = false
+                                    }
+                                    .padding(vertical = 10.dp, horizontal = 12.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        param.label.uppercase(),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isSelected) BrandDark else TextMuted,
+                                        letterSpacing = 0.5.sp
+                                    )
+                                    if (isSelected) {
+                                        Box(Modifier.size(6.dp).clip(CircleShape).background(Emerald))
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -198,7 +261,7 @@ private fun MonthCalendar(currentEpoch: Long, daySummaries: Map<String, Int>, ta
                     if (dayNum < 1 || dayNum > daysInMonth) { Box(Modifier.size(36.dp)) } else {
                         val epoch = Calendar.getInstance().apply { timeInMillis = currentEpoch; set(Calendar.DAY_OF_MONTH, dayNum) }.timeInMillis
                         val kcal = daySummaries[dayKey(epoch)] ?: 0
-                        val r = kcal.toFloat() / target
+                        val r = if (target == 0) 0f else kcal.toFloat() / target
                         val color = if (kcal == 0) null else if (r > 1f) BrandRed else if (r >= 0.8f) Emerald else Amber
                         Box(Modifier.size(36.dp).clip(CircleShape).background(color ?: BrandSurface).border(0.5.dp, if (color == null) Divider else Color.Transparent, CircleShape).clickable { onDaySelect(epoch) }, contentAlignment = Alignment.Center) {
                             Text("$dayNum", fontSize = 10.sp, fontWeight = FontWeight.Black, color = if (color != null) Color.White else TextFaint)
@@ -218,7 +281,7 @@ private fun WeekChart(rangeStart: Long, daySummaries: Map<String, Int>, target: 
             val epoch = rangeStart + i * 86400000L
             val kcal = daySummaries[dayKey(epoch)] ?: 0
             val frac = if (kcal == 0) 0.02f else min(kcal.toFloat() / maxVal, 1f)
-            val r = kcal.toFloat() / target
+            val r = if (target == 0) 0f else kcal.toFloat() / target
             val barColor = if (kcal == 0) BrandSurface else if (r > 1f) BrandRed else if (r >= 0.8f) Emerald else Amber
             val lbl = SimpleDateFormat("EEE", Locale.getDefault()).format(Date(epoch)).take(1)
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Bottom) {

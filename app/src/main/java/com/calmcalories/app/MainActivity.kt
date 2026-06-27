@@ -95,6 +95,20 @@ private fun CalmCaloriesApp(vm: AppViewModel) {
     val processingImageBytes by vm.processingImageBytes.collectAsState()
 
     val ctx = LocalContext.current
+    LaunchedEffect(isDarkTheme) {
+        val activity = ctx as? ComponentActivity ?: return@LaunchedEffect
+        activity.enableEdgeToEdge(
+            statusBarStyle = if (isDarkTheme) {
+                androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+            } else {
+                androidx.activity.SystemBarStyle.light(
+                    android.graphics.Color.TRANSPARENT,
+                    android.graphics.Color.TRANSPARENT
+                )
+            }
+        )
+    }
+
     LaunchedEffect(Unit) {
         vm.mealAddedEvent.collect { msg ->
             android.widget.Toast.makeText(ctx, msg, android.widget.Toast.LENGTH_SHORT).show()

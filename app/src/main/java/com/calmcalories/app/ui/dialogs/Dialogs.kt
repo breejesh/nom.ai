@@ -57,7 +57,7 @@ fun PromptDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
                 }
             }
         },
-        confirmButton = { Button(onClick = { if (text.isNotBlank()) onConfirm(text) }, colors = ButtonDefaults.buttonColors(containerColor = BrandDark), shape = RoundedCornerShape(12.dp)) { Text("Analyze with AI", fontWeight = FontWeight.Black, fontSize = 12.sp) } },
+        confirmButton = { Button(onClick = { if (text.isNotBlank()) onConfirm(text) }, colors = ButtonDefaults.buttonColors(containerColor = BrandDark), shape = RoundedCornerShape(12.dp)) { Text("Add with AI", fontWeight = FontWeight.Black, fontSize = 12.sp, color = BrandCard) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = TextMuted, fontSize = 12.sp) } }
     )
 }
@@ -73,7 +73,7 @@ fun ManualEntryDialog(onDismiss: () -> Unit, onConfirm: (String, Int) -> Unit) {
                 LabelInput("CALORIES (KCAL)", cals, "e.g. 450") { cals = it }
             }
         },
-        confirmButton = { Button(onClick = { val c = cals.toIntOrNull() ?: 0; if (name.isNotBlank() && c > 0) onConfirm(name, c) }, colors = ButtonDefaults.buttonColors(containerColor = BrandDark), shape = RoundedCornerShape(12.dp)) { Text("Add", fontWeight = FontWeight.Black, fontSize = 12.sp) } },
+        confirmButton = { Button(onClick = { val c = cals.toIntOrNull() ?: 0; if (name.isNotBlank() && c > 0) onConfirm(name, c) }, colors = ButtonDefaults.buttonColors(containerColor = BrandDark), shape = RoundedCornerShape(12.dp)) { Text("Add", fontWeight = FontWeight.Black, fontSize = 12.sp, color = BrandCard) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = TextMuted, fontSize = 12.sp) } },
     )
 }

@@ -1,72 +1,72 @@
-# 🍃 CalmCalories
+<p align="center">
+  <img src="screenshots/logo.png" width="100" height="100" alt="CalmCalories Logo">
+</p>
 
-**A quiet-luxury, privacy-first, on-device AI calorie advisor for Android.**
+<h1 align="center">CalmCalories</h1>
 
-CalmCalories helps you track nourishment and stay in your optimal calorie zone without intrusive popups, subscription walls, or data leaks.
+<p align="center">
+  <strong>A quiet-luxury, privacy-first, offline-local AI calorie advisor for Android.</strong><br>
+  Estimate nutrition, track goals, and analyze metrics fully on-device. No accounts, no data leaks.
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Android-8.0+-4D7C0F?style=flat-square&logo=android" alt="Android">
+  <img src="https://img.shields.io/badge/Kotlin-2.0-7F52FF?style=flat-square&logo=kotlin" alt="Kotlin">
+  <img src="https://img.shields.io/badge/UI-Jetpack%20Compose-0891B2?style=flat-square&logo=jetpackcompose" alt="Jetpack Compose">
+  <img src="https://img.shields.io/badge/Privacy-100%25%20On--Device-15803D?style=flat-square" alt="Privacy First">
+  <img src="https://img.shields.io/badge/License-MIT-059669?style=flat-square" alt="License">
+</p>
 
 ---
 
-## ✨ Features
-
-- 🌿 **Quiet-Luxury Design** - A warm minimalist visual language built on champagne gold, eucalyptus green, and rich espresso crema, utilizing capsule gauges and symmetric layout structures.
-- 🤖 **On-Device Gemma AI** - Completely private, local extraction of food items, portions, and calories from natural descriptions (e.g. *"2 poached eggs, buttered toast, and black coffee"*).
-- 📸 **Offline AI Vision Scan** - Snap a picture or choose from the gallery. The local model scans ingredients and estimates portions directly on your phone.
-- 📐 **ScientificDeficit Advisor** - Leverages the Mifflin-St Jeor equation combined with custom activity level multipliers to suggest a safe daily calorie target.
-- 📊 **Intelligence Dashboards** - Visualize your weekly logs, daily hour-by-hour intake, and monthly target calendars.
-- 🔐 **Privacy-First & Offline-First** - Works fully without an internet connection. No tracking cookies, no logins, and zero external network uploads.
+CalmCalories helps you track nourishment and stay in your optimal calorie zone without intrusive popups, subscription walls, or data leaks. Powered by Google's local **Gemma-2B** models, all nutrition extraction and vision scanning run entirely on your phone.
 
 ---
 
 ## 📸 Screenshots
 
-<p float="left">
-  <img src="https://raw.githubusercontent.com/breejesh/calmcalories-android/main/art/screenshot_home.png" alt="CalmCalories Home Screen" width="260"/>
-  <img src="https://raw.githubusercontent.com/breejesh/calmcalories-android/main/art/screenshot_stats.png" alt="Intelligence Dashboard" width="260"/>
-  <img src="https://raw.githubusercontent.com/breejesh/calmcalories-android/main/art/screenshot_journal.png" alt="Nourishment Timeline" width="260"/>
+> [!TIP]
+> Place your actual app mockups inside the `screenshots/` directory using these file names to display them below:
+
+<p align="center">
+  <img src="screenshots/today_dashboard.png" width="260" alt="Today Dashboard">
+  <img src="screenshots/stats_insights.png" width="260" alt="Stats Insights">
+  <img src="screenshots/settings_theme.png" width="260" alt="Settings & Appearance">
 </p>
 
-*The clean, modern UI remains consistent across all tabs.*
+---
+
+## ✨ Key Features
+
+- 🤖 **Local Gemma-2B AI Extractor**
+  - Fully private, local extraction of food items, portion sizes, and calories from natural descriptions (e.g. *"2 scrambled eggs on whole wheat toast"*).
+  - Mathematical macro alignment: automatically balances calorie outputs against protein (4 kcal/g), carbs (4 kcal/g), and fats (9 kcal/g).
+- 📸 **On-Device Vision Scan**
+  - Snap a meal photo or select from your library. The local Gemma model extracts portion estimates and nutrition offline.
+- 📐 **Scientific Deficit Calculator**
+  - Estimates your daily BMR/TDEE goals using the Mifflin-St Jeor equation and custom physical activity multipliers.
+- 📊 **Intelligence Dashboard**
+  - Dynamic parameter switching in Stats (Calories, Protein, Carbs, Fat) using a custom popup selector.
+  - Interactive week-by-week bar charts, hourly daily charts, and daily compliance calendars.
+- 🎨 **Minimalist Design & Dark Mode**
+  - Warm minimalist typography and dynamic light/dark system themes.
+  - Segmented Day/Night controller in settings with WbSunny and NightsStay icon controls.
+- 🔐 **Guaranteed Privacy**
+  - Offline-first execution. No sign-ups, no cookies, and zero external cloud uploads.
 
 ---
 
 ## 🛠️ Build & Installation
 
-### Requirements
-- Android SDK 34+
-- Gradle 9.0+
-- JDK 17+
+### Prerequisites
+- Android Studio Ladybug (or newer)
+- Android SDK 26+
 
-### Step-by-Step Build
+### Setup
 1. Clone the repository:
    ```bash
    git clone https://github.com/breejesh/calmcalories-android.git
-   cd calmcalories-android
    ```
-2. Build the debug APK:
-   ```bash
-   ./gradlew assembleDebug
-   ```
-3. Install the generated APK on your device:
-   ```bash
-   adb install app/build/outputs/apk/debug/app-debug.apk
-   ```
-
-### 🧠 Gemma Model Asset Setup
-Upon the first launch, the app will automatically download the **Gemma-2B** model format directly from HuggingFace to your device's private storage. 
-
-If you prefer to load the model file manually:
-1. Download `gemma-4-E2B-it.litertlm` from [HuggingFace](https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm).
-2. Save it directly to your device's external storage folder:
-   `/Android/data/com.calmcalories.app/files/gemma-4-E2B-it.litertlm`
-
----
-
-## 🏛️ Architecture & Clean Design
-
-CalmCalories follows Android's **Clean Architecture** patterns, separating tasks into decoupled packages:
-- **`ui.theme`**: Holds brand token variables (`Theme.kt`).
-- **`ui.components`**: Modular composables such as `ProgressRing`, `StatCard`, and `MealRow`.
-- **`ui.dialogs`**: Modals for prompt entries, manual values, and AI processing loaders.
-- **`ui.screens`**: Self-contained screens (`HomeScreen`, `StatsScreen`, `JournalScreen`, `SettingsScreen`).
-- **`data`**: Room DB entities, DAOs, and repository bindings.
-- **`ai`**: Gemma LiteRT service runners.
+2. Open the project in Android Studio.
+3. Sync Gradle and build the project.
+4. **AI Setup:** Download your local Gemma-2B weights inside the app's Setup screen.

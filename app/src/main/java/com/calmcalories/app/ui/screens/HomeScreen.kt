@@ -142,12 +142,20 @@ fun HomeScreen(
                             .border(0.5.dp, Emerald.copy(alpha = 0.2f), RoundedCornerShape(10.dp)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_logo_nomai),
-                            contentDescription = null,
-                            tint = Color.Unspecified,
-                            modifier = Modifier.size(28.dp)
-                        )
+                        Box(modifier = Modifier.size(28.dp), contentAlignment = Alignment.Center) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_logo_base),
+                                contentDescription = null,
+                                tint = BrandDark,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_logo_details),
+                                contentDescription = null,
+                                tint = Color.Unspecified,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
                     }
                     Column {
                         Text(

@@ -1,6 +1,7 @@
 package com.calmcalories.app.ai
 
 import android.content.Context
+import android.os.Environment
 import com.google.ai.edge.litertlm.Backend
 import com.google.ai.edge.litertlm.Content
 import com.google.ai.edge.litertlm.Contents
@@ -107,6 +108,11 @@ class GemmaLiteRtService(private val context: Context) {
     }
 
     fun isModelPresent(modelFileName: String = DEFAULT_MODEL_FILE): Boolean {
+        val publicDownload = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), modelFileName)
+        if (publicDownload.exists()) return true
+        val publicDocuments = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), modelFileName)
+        if (publicDocuments.exists()) return true
+
         val externalTarget = context.getExternalFilesDir(null)?.let { File(it, modelFileName) }
         if (externalTarget != null && externalTarget.exists()) return true
         if (File(context.filesDir, modelFileName).exists()) return true
@@ -116,6 +122,11 @@ class GemmaLiteRtService(private val context: Context) {
         } else {
             modelFileName.replace("e2b", "E2B")
         }
+        val publicDownloadAlt = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), alternativeName)
+        if (publicDownloadAlt.exists()) return true
+        val publicDocumentsAlt = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), alternativeName)
+        if (publicDocumentsAlt.exists()) return true
+
         val altExternal = context.getExternalFilesDir(null)?.let { File(it, alternativeName) }
         if (altExternal != null && altExternal.exists()) return true
         if (File(context.filesDir, alternativeName).exists()) return true
@@ -123,6 +134,19 @@ class GemmaLiteRtService(private val context: Context) {
     }
 
     fun getTargetFile(modelFileName: String = DEFAULT_MODEL_FILE): File {
+        val publicDownloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        if (publicDownloadDir != null) {
+            try {
+                if (!publicDownloadDir.exists()) {
+                    publicDownloadDir.mkdirs()
+                }
+                val testFile = File(publicDownloadDir, ".write_test_${System.currentTimeMillis()}")
+                if (testFile.createNewFile()) {
+                    testFile.delete()
+                    return File(publicDownloadDir, modelFileName)
+                }
+            } catch (_: Exception) {}
+        }
         val externalDir = context.getExternalFilesDir(null) ?: context.filesDir
         return File(externalDir, modelFileName)
     }
@@ -138,19 +162,25 @@ class GemmaLiteRtService(private val context: Context) {
     }
 
     private fun ensureModelPresent(modelFileName: String): String {
-        // 1. Check external files directory (recommended for large models via adb push)
+        val publicDownload = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), modelFileName)
+        if (publicDownload.exists()) {
+            return publicDownload.absolutePath
+        }
+        val publicDocuments = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), modelFileName)
+        if (publicDocuments.exists()) {
+            return publicDocuments.absolutePath
+        }
+
         val externalTarget = context.getExternalFilesDir(null)?.let { File(it, modelFileName) }
         if (externalTarget != null && externalTarget.exists()) {
             return externalTarget.absolutePath
         }
 
-        // 2. Check internal storage files directory
         val internalTarget = File(context.filesDir, modelFileName)
         if (internalTarget.exists()) {
             return internalTarget.absolutePath
         }
 
-        // 3. Fallback to copy from assets if it exists there (for smaller models)
         try {
             context.assets.open("models/$modelFileName").use { input ->
                 internalTarget.outputStream().use { output ->
@@ -159,12 +189,20 @@ class GemmaLiteRtService(private val context: Context) {
             }
             return internalTarget.absolutePath
         } catch (_: java.io.IOException) {
-            // Keep trying case-insensitive name just in case
             val alternativeName = if (modelFileName.contains("E2B")) {
                 modelFileName.replace("E2B", "e2b")
             } else {
                 modelFileName.replace("e2b", "E2B")
             }
+            val publicDownloadAlt = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), alternativeName)
+            if (publicDownloadAlt.exists()) {
+                return publicDownloadAlt.absolutePath
+            }
+            val publicDocumentsAlt = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), alternativeName)
+            if (publicDocumentsAlt.exists()) {
+                return publicDocumentsAlt.absolutePath
+            }
+
             val altExternal = context.getExternalFilesDir(null)?.let { File(it, alternativeName) }
             if (altExternal != null && altExternal.exists()) {
                 return altExternal.absolutePath
@@ -175,8 +213,8 @@ class GemmaLiteRtService(private val context: Context) {
 
             throw IllegalStateException(
                 "Model '$modelFileName' not found.\n" +
-                "To install, push it to your device's external files directory:\n" +
-                "adb push <path_to_model>/$modelFileName /sdcard/Android/data/com.calmcalories.app/files/"
+                "To install, push it to your device's public Downloads directory:\n" +
+                "adb push <path_to_model>/$modelFileName /sdcard/Download/"
             )
         }
     }

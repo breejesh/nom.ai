@@ -51,8 +51,7 @@ enum class StatsParam(val label: String, val suffix: String) {
     Calories("Calories", "kcal"),
     Protein("Protein", "g"),
     Carbs("Carbs", "g"),
-    Fat("Fat", "g"),
-    Sugar("Sugar", "g")
+    Fat("Fat", "g")
 }
 
 private enum class ViewMode { Day, Week, Month }
@@ -101,92 +100,89 @@ fun StatsScreen(meals: List<MealEntry>, dailyGoal: Int) {
             ratio >= 0.8f -> Emerald to "Optimal"
             else -> Amber to "Replenishing"
         }
-        StatsParam.Sugar -> when {
-            ratio > 1.0f -> BrandRed to "High Sugar"
-            ratio >= 0.8f -> Amber to "Warning"
-            else -> Emerald to "Low Sugar"
-        }
     }
 
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(BrandSurface)
-            .verticalScroll(rememberScrollState())
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
-    ) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.padding(horizontal = 4.dp)) {
-                Text("STATS", fontSize = 16.sp, fontWeight = FontWeight.Black, color = BrandDark, letterSpacing = 1.sp)
-                Text("INTELLIGENCE DASHBOARD", fontSize = 9.sp, fontWeight = FontWeight.Black, color = TextMuted, letterSpacing = 1.5.sp)
-            }
-        }
-
-        // ── Custom Dropdown Parameter Selector ──
-        Box(modifier = Modifier.fillMaxWidth()) {
-            Row(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(BrandCard)
-                    .border(0.5.dp, Divider, RoundedCornerShape(16.dp))
-                    .clickable { isDropdownExpanded = !isDropdownExpanded }
-                    .padding(vertical = 12.dp, horizontal = 16.dp)
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text("VIEWING METRIC", fontSize = 8.sp, fontWeight = FontWeight.Black, color = TextMuted, letterSpacing = 1.5.sp)
-                    Text(selectedParam.label.uppercase(), fontSize = 14.sp, fontWeight = FontWeight.Bold, color = BrandDark)
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .background(BrandSurface)
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.padding(horizontal = 4.dp)) {
+                    Text("STATS", fontSize = 16.sp, fontWeight = FontWeight.Black, color = BrandDark, letterSpacing = 1.sp)
+                    Text("INTELLIGENCE DASHBOARD", fontSize = 9.sp, fontWeight = FontWeight.Black, color = TextMuted, letterSpacing = 1.5.sp)
                 }
-                Text(if (isDropdownExpanded) "▲" else "▼", fontSize = 10.sp, color = TextMuted)
             }
-            
-            if (isDropdownExpanded) {
-                Popup(
-                    alignment = Alignment.TopCenter,
-                    onDismissRequest = { isDropdownExpanded = false },
-                    properties = PopupProperties(focusable = true)
+
+            // ── Custom Dropdown Parameter Selector ──
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(BrandCard)
+                        .border(0.5.dp, Divider, RoundedCornerShape(16.dp))
+                        .clickable { isDropdownExpanded = !isDropdownExpanded }
+                        .padding(vertical = 12.dp, horizontal = 16.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.dp)
-                            .padding(top = 58.dp) // shift overlay below trigger card
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(BrandCard)
-                            .border(0.5.dp, Divider, RoundedCornerShape(16.dp))
-                            .padding(6.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    Column {
+                        Text("VIEWING METRIC", fontSize = 8.sp, fontWeight = FontWeight.Black, color = TextMuted, letterSpacing = 1.5.sp)
+                        Text(selectedParam.label.uppercase(), fontSize = 14.sp, fontWeight = FontWeight.Bold, color = BrandDark)
+                    }
+                    Text(if (isDropdownExpanded) "▲" else "▼", fontSize = 10.sp, color = TextMuted)
+                }
+                
+                if (isDropdownExpanded) {
+                    Popup(
+                        alignment = Alignment.TopCenter,
+                        onDismissRequest = { isDropdownExpanded = false },
+                        properties = PopupProperties(focusable = true)
                     ) {
-                        StatsParam.entries.forEach { param ->
-                            val isSelected = selectedParam == param
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(if (isSelected) BrandSurface else Color.Transparent)
-                                    .clickable { 
-                                        selectedParam = param
-                                        isDropdownExpanded = false
-                                    }
-                                    .padding(vertical = 10.dp, horizontal = 12.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 24.dp)
+                                .padding(top = 58.dp) // shift overlay below trigger card
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(BrandCard)
+                                .border(0.5.dp, Divider, RoundedCornerShape(16.dp))
+                                .padding(6.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            StatsParam.entries.forEach { param ->
+                                val isSelected = selectedParam == param
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(if (isSelected) BrandSurface else Color.Transparent)
+                                        .clickable { 
+                                            selectedParam = param
+                                            isDropdownExpanded = false
+                                        }
+                                        .padding(vertical = 10.dp, horizontal = 12.dp)
                                 ) {
-                                    Text(
-                                        param.label.uppercase(),
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (isSelected) BrandDark else TextMuted,
-                                        letterSpacing = 0.5.sp
-                                    )
-                                    if (isSelected) {
-                                        Box(Modifier.size(6.dp).clip(CircleShape).background(Emerald))
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            param.label.uppercase(),
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (isSelected) BrandDark else TextMuted,
+                                            letterSpacing = 0.5.sp
+                                        )
+                                        if (isSelected) {
+                                            Box(Modifier.size(6.dp).clip(CircleShape).background(Emerald))
+                                        }
                                     }
                                 }
                             }
@@ -194,53 +190,66 @@ fun StatsScreen(meals: List<MealEntry>, dailyGoal: Int) {
                     }
                 }
             }
-        }
 
-        // ── View Mode Selector ──
-        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(DividerLight).border(0.5.dp, Divider, RoundedCornerShape(16.dp)).padding(4.dp)) {
-            ViewMode.entries.forEach { mode ->
-                val active = viewMode == mode
-                Box(Modifier.weight(1f).clip(RoundedCornerShape(12.dp)).background(if (active) BrandCard else Color.Transparent)
-                    .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { viewMode = mode }.padding(vertical = 8.dp), contentAlignment = Alignment.Center) {
-                    Text(mode.name.uppercase(), fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, color = if (active) BrandDark else TextFaint, letterSpacing = 1.sp)
+            // ── View Mode Selector ──
+            Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(DividerLight).border(0.5.dp, Divider, RoundedCornerShape(16.dp)).padding(4.dp)) {
+                ViewMode.entries.forEach { mode ->
+                    val active = viewMode == mode
+                    Box(Modifier.weight(1f).clip(RoundedCornerShape(12.dp)).background(if (active) BrandCard else Color.Transparent)
+                        .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { viewMode = mode }.padding(vertical = 8.dp), contentAlignment = Alignment.Center) {
+                        Text(mode.name.uppercase(), fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, color = if (active) BrandDark else TextFaint, letterSpacing = 1.sp)
+                    }
                 }
             }
-        }
 
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            DateNavBtn("‹") {
-                currentEpoch = when (viewMode) { ViewMode.Day -> currentEpoch - 86400000L; ViewMode.Week -> currentEpoch - 7 * 86400000L; ViewMode.Month -> shiftMonth(currentEpoch, -1) }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                DateNavBtn("‹") {
+                    currentEpoch = when (viewMode) { ViewMode.Day -> currentEpoch - 86400000L; ViewMode.Week -> currentEpoch - 7 * 86400000L; ViewMode.Month -> shiftMonth(currentEpoch, -1) }
+                }
+                Text(when (viewMode) {
+                    ViewMode.Month -> SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(Date(currentEpoch))
+                    ViewMode.Day -> SimpleDateFormat("EEEE, MMM d", Locale.getDefault()).format(Date(currentEpoch))
+                    ViewMode.Week -> "${SimpleDateFormat("MMM d", Locale.getDefault()).format(Date(rangeStart))} – ${SimpleDateFormat("MMM d", Locale.getDefault()).format(Date(rangeEnd))}"
+                }, fontSize = 13.sp, fontWeight = FontWeight.Black, color = BrandDark)
+                val canFwd = rangeEnd < System.currentTimeMillis()
+                DateNavBtn("›", enabled = canFwd) {
+                    currentEpoch = when (viewMode) { ViewMode.Day -> currentEpoch + 86400000L; ViewMode.Week -> currentEpoch + 7 * 86400000L; ViewMode.Month -> shiftMonth(currentEpoch, 1) }
+                }
             }
-            Text(when (viewMode) {
-                ViewMode.Month -> SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(Date(currentEpoch))
-                ViewMode.Day -> SimpleDateFormat("EEEE, MMM d", Locale.getDefault()).format(Date(currentEpoch))
-                ViewMode.Week -> "${SimpleDateFormat("MMM d", Locale.getDefault()).format(Date(rangeStart))} – ${SimpleDateFormat("MMM d", Locale.getDefault()).format(Date(rangeEnd))}"
-            }, fontSize = 13.sp, fontWeight = FontWeight.Black, color = BrandDark)
-            val canFwd = rangeEnd < System.currentTimeMillis()
-            DateNavBtn("›", enabled = canFwd) {
-                currentEpoch = when (viewMode) { ViewMode.Day -> currentEpoch + 86400000L; ViewMode.Week -> currentEpoch + 7 * 86400000L; ViewMode.Month -> shiftMonth(currentEpoch, 1) }
+
+            Row(Modifier.fillMaxWidth().height(IntrinsicSize.Max), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                StatCard(
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                    label = if (viewMode == ViewMode.Day) "TOTAL ${selectedParam.label.uppercase()}" else "AVERAGE ${selectedParam.label.uppercase()}",
+                    value = "$avgVal ${selectedParam.suffix}",
+                    valueColor = statusColor
+                )
+                StatCard(
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                    label = "CYCLE ZONE",
+                    value = statusLabel,
+                    valueColor = statusColor
+                )
+            }
+
+            when (viewMode) {
+                ViewMode.Month -> MonthCalendar(currentEpoch, daySummaries, currentTarget) { e -> currentEpoch = e; viewMode = ViewMode.Day }
+                ViewMode.Week -> WeekChart(rangeStart, daySummaries, currentTarget) { e -> currentEpoch = e; viewMode = ViewMode.Day }
+                ViewMode.Day -> DayChart(mealsInRange, currentTarget, statusColor, selectedParam)
             }
         }
 
-        Row(Modifier.fillMaxWidth().height(IntrinsicSize.Max), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            StatCard(
-                modifier = Modifier.weight(1f).fillMaxHeight(),
-                label = if (viewMode == ViewMode.Day) "TOTAL ${selectedParam.label.uppercase()}" else "AVERAGE ${selectedParam.label.uppercase()}",
-                value = "$avgVal ${selectedParam.suffix}",
-                valueColor = statusColor
+        if (isDropdownExpanded) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) {
+                        isDropdownExpanded = false
+                    }
             )
-            StatCard(
-                modifier = Modifier.weight(1f).fillMaxHeight(),
-                label = if (selectedParam == StatsParam.Sugar) "SUGAR LEVEL" else "CYCLE ZONE",
-                value = statusLabel,
-                valueColor = statusColor
-            )
-        }
-
-        when (viewMode) {
-            ViewMode.Month -> MonthCalendar(currentEpoch, daySummaries, currentTarget) { e -> currentEpoch = e; viewMode = ViewMode.Day }
-            ViewMode.Week -> WeekChart(rangeStart, daySummaries, currentTarget) { e -> currentEpoch = e; viewMode = ViewMode.Day }
-            ViewMode.Day -> DayChart(mealsInRange, currentTarget, statusColor, selectedParam)
         }
     }
 }
@@ -325,7 +334,6 @@ private fun MealEntry.getValueFor(param: StatsParam): Int {
         StatsParam.Protein -> this.foodItems.sumOf { it.proteinGrams }
         StatsParam.Carbs -> this.foodItems.sumOf { it.carbsGrams }
         StatsParam.Fat -> this.foodItems.sumOf { it.fatGrams }
-        StatsParam.Sugar -> this.foodItems.sumOf { it.sugarGrams }
     }
 }
 
@@ -335,7 +343,6 @@ private fun getTargetFor(param: StatsParam, dailyGoal: Int): Int {
         StatsParam.Protein -> (dailyGoal * 0.25f / 4f).toInt()
         StatsParam.Carbs -> (dailyGoal * 0.50f / 4f).toInt()
         StatsParam.Fat -> (dailyGoal * 0.25f / 9f).toInt()
-        StatsParam.Sugar -> (dailyGoal * 0.08f / 4f).toInt()
     }
 }
 

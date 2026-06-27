@@ -14,7 +14,7 @@
         android:pathData="M12,12m-9.5,0a9.5,9.5 0,1 1,19 0a9.5,9.5 0,1 1,-19 0" />
     <!-- Monogram 'N' (Bowl/Plate/Smile curve) -->
     <path
-        android:strokeColor="@color/logo_primary"
+        android:strokeColor="#1D1916"
         android:strokeWidth="2"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"

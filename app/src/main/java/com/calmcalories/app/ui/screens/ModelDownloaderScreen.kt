@@ -31,6 +31,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.painterResource
+import com.calmcalories.app.R
 import com.calmcalories.app.ui.components.SCard
 import com.calmcalories.app.ui.theme.*
 import java.util.Locale
@@ -62,17 +64,22 @@ fun ModelDownloaderScreen(
             modifier = Modifier
                 .size(64.dp)
                 .clip(RoundedCornerShape(20.dp))
-                .background(Emerald.copy(alpha = 0.12f))
-                .border(0.5.dp, Emerald.copy(alpha = 0.25f), RoundedCornerShape(20.dp)),
+                .background(Emerald.copy(alpha = 0.08f))
+                .border(0.5.dp, Emerald.copy(alpha = 0.2f), RoundedCornerShape(20.dp)),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.Default.Eco, contentDescription = null, tint = Emerald, modifier = Modifier.size(32.dp))
+            Icon(
+                painter = painterResource(id = R.drawable.ic_logo_nomai),
+                contentDescription = null,
+                tint = Color.Unspecified,
+                modifier = Modifier.size(44.dp)
+            )
         }
 
         Spacer(Modifier.height(24.dp))
 
         Text(
-            "CalmCalories",
+            "NomAI",
             fontSize = 24.sp,
             fontWeight = FontWeight.Light,
             color = BrandDark,

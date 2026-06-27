@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "CalmCaloriesAndroid"
+rootProject.name = "NomAI"
 include(":app")

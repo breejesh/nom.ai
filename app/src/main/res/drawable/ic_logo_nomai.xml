@@ -1,17 +1,8 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp"
-    android:height="108dp"
+    android:width="24dp"
+    android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
-    <!-- Background Circle -->
-    <path
-        android:fillColor="#FAF8F5"
-        android:pathData="M12,12m-11,0a11,11 0,1 1,22 0a11,11 0,1 1,-22 0" />
-    <!-- Outer accent ring -->
-    <path
-        android:strokeColor="#E5DFD4"
-        android:strokeWidth="0.3"
-        android:pathData="M12,12m-9.5,0a9.5,9.5 0,1 1,19 0a9.5,9.5 0,1 1,-19 0" />
     <!-- Bowl (Food/Nom) -->
     <path
         android:fillColor="#1D1916"

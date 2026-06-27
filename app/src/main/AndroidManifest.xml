@@ -5,7 +5,7 @@
 
     <application
         android:allowBackup="true"
-        android:label="CalmCalories"
+        android:label="NomAI"
         android:icon="@drawable/ic_launcher"
         android:roundIcon="@drawable/ic_launcher"
         android:supportsRtl="true"

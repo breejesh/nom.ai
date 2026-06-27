@@ -53,6 +53,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import com.calmcalories.app.R
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -132,13 +134,27 @@ fun HomeScreen(
         item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Box(Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(Emerald.copy(alpha = 0.12f)).border(0.5.dp, Emerald.copy(alpha = 0.25f), RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.Eco, contentDescription = null, tint = Emerald, modifier = Modifier.size(22.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Emerald.copy(alpha = 0.08f))
+                            .border(0.5.dp, Emerald.copy(alpha = 0.2f), RoundedCornerShape(10.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_logo_nomai),
+                            contentDescription = null,
+                            tint = Color.Unspecified,
+                            modifier = Modifier.size(22.dp)
+                        )
                     }
                     Column {
                         Text(
-                            if (userName.isNotBlank()) "Hey, $userName" else "CalmCalories",
-                            fontSize = 18.sp, fontWeight = FontWeight.Light, color = BrandSecondary, letterSpacing = (-0.5).sp,
+                            if (userName.isNotBlank()) "Hey, $userName" else "NomAI",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Black,
+                            color = BrandDark
                         )
                         Text(SimpleDateFormat("EEEE, MMM d", Locale.getDefault()).format(Date()).uppercase(), fontSize = 9.sp, fontWeight = FontWeight.Black, color = TextMuted, letterSpacing = 1.5.sp)
                     }

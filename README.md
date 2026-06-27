@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="screenshots/logo.png" width="100" height="100" alt="CalmCalories Logo">
+  <img src="screenshots/logo.png" width="100" height="100" alt="NomAI Logo">
 </p>
 
-<h1 align="center">CalmCalories</h1>
+<h1 align="center">NomAI</h1>
 
 <p align="center">
   <strong>A quiet-luxury, privacy-first, offline-local AI calorie advisor for Android.</strong><br>
@@ -19,7 +19,7 @@
 
 ---
 
-CalmCalories helps you track nourishment and stay in your optimal calorie zone without intrusive popups, subscription walls, or data leaks. Powered by Google's local **Gemma-2B** models, all nutrition extraction and vision scanning run entirely on your phone.
+NomAI helps you track nourishment and stay in your optimal calorie zone without intrusive popups, subscription walls, or data leaks. Powered by Google's local **Gemma-2B** models, all nutrition extraction and vision scanning run entirely on your phone.
 
 ---
 
@@ -65,7 +65,7 @@ CalmCalories helps you track nourishment and stay in your optimal calorie zone w
 ### Setup
 1. Clone the repository:
    ```bash
-   git clone https://github.com/breejesh/calmcalories-android.git
+   git clone https://github.com/breejesh/nomai-android.git
    ```
 2. Open the project in Android Studio.
 3. Sync Gradle and build the project.

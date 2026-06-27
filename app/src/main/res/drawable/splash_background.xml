@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Solid Background Color -->
+    <item>
+        <color android:color="#F3EFE9"/>
+    </item>
+    <!-- Centered Logo Icon -->
+    <item
+        android:drawable="@drawable/ic_launcher"
+        android:gravity="center"
+        android:width="128dp"
+        android:height="128dp" />
+</layer-list>

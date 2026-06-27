@@ -21,12 +21,12 @@ class LocalAiExtractor(
             gemmaLiteRtService.initializeIfNeeded(backend).getOrThrow()
 
             val systemPrompt = buildString {
-                append("System: You are an expert food nutritionist. Extract food items, calories, and macronutrients (protein, carbs, and fat in grams). ")
+                append("System: You are an expert food nutritionist. Extract food items, calories, macronutrients (protein, carbs, and fat in grams), and sugar (in grams). ")
                 append("Estimate reasonably if details are vague. NEVER return 0 calories or 0 macros for solid food. ")
                 append("If the input or image does not contain any food items, return an empty items list: {\"mealName\":\"\",\"items\":[]}. ")
                 append("Return ONLY the JSON. No markdown backticks, no code block formatting, no text before or after.\n\n")
                 append("Example Input: 'double espresso and a croissant'\n")
-                append("Example Output: {\"mealName\":\"Espresso & Croissant\",\"items\":[{\"food\":\"Double Espresso\",\"quantity\":\"1 cup\",\"calories\":5,\"proteinGrams\":0,\"carbsGrams\":1,\"fatGrams\":0},{\"food\":\"Croissant\",\"quantity\":\"1 medium\",\"calories\":270,\"proteinGrams\":6,\"carbsGrams\":32,\"fatGrams\":13}]}\n\n")
+                append("Example Output: {\"mealName\":\"Espresso & Croissant\",\"items\":[{\"food\":\"Double Espresso\",\"quantity\":\"1 cup\",\"calories\":5,\"proteinGrams\":0,\"carbsGrams\":1,\"fatGrams\":0,\"sugarGrams\":0},{\"food\":\"Croissant\",\"quantity\":\"1 medium\",\"calories\":270,\"proteinGrams\":6,\"carbsGrams\":32,\"fatGrams\":13,\"sugarGrams\":8}]}\n\n")
                 append("User Input: ")
                 append(prompt)
             }
@@ -102,6 +102,13 @@ class LocalAiExtractor(
                     else -> 0
                 }
 
+                val sVal = item.opt("sugarGrams")
+                val sugar = when (sVal) {
+                    is Number -> sVal.toInt()
+                    is String -> sVal.filter { it.isDigit() }.toIntOrNull() ?: 0
+                    else -> 0
+                }
+
                 add(
                     FoodItem(
                         food = item.optString("food", "Unknown item"),
@@ -110,6 +117,7 @@ class LocalAiExtractor(
                         proteinGrams = protein,
                         carbsGrams = carbs,
                         fatGrams = fat,
+                        sugarGrams = sugar,
                     )
                 )
             }

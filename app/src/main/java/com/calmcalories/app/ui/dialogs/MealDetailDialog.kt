@@ -107,6 +107,7 @@ fun MealDetailDialog(
                 val totalProtein = meal.foodItems.sumOf { it.proteinGrams }
                 val totalCarbs = meal.foodItems.sumOf { it.carbsGrams }
                 val totalFat = meal.foodItems.sumOf { it.fatGrams }
+                val totalSugar = meal.foodItems.sumOf { it.sugarGrams }
 
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
                     Column(Modifier.weight(1f)) {
@@ -115,7 +116,7 @@ fun MealDetailDialog(
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text("P: ${totalProtein}g", fontSize = 11.sp, color = Emerald, fontWeight = FontWeight.Bold)
                             Text("•", fontSize = 11.sp, color = TextFaint)
-                            Text("C: ${totalCarbs}g", fontSize = 11.sp, color = Amber, fontWeight = FontWeight.Bold)
+                            Text("C: ${totalCarbs}g (${totalSugar}g sug)", fontSize = 11.sp, color = Amber, fontWeight = FontWeight.Bold)
                             Text("•", fontSize = 11.sp, color = TextFaint)
                             Text("F: ${totalFat}g", fontSize = 11.sp, color = BrandRed, fontWeight = FontWeight.Bold)
                         }
@@ -133,7 +134,7 @@ fun MealDetailDialog(
                         Text("NOURISHMENT BREAKDOWN", fontSize = 9.sp, fontWeight = FontWeight.Black, color = TextMuted, letterSpacing = 1.5.sp)
                         Spacer(Modifier.height(4.dp))
                         meal.foodItems.forEach { item ->
-                            val itemMacroStr = "P: ${item.proteinGrams}g  •  C: ${item.carbsGrams}g  •  F: ${item.fatGrams}g"
+                            val itemMacroStr = "P: ${item.proteinGrams}g  •  C: ${item.carbsGrams}g (${item.sugarGrams}g sugar)  •  F: ${item.fatGrams}g"
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                                 Column {
                                     Text(item.food.lowercase().replaceFirstChar { it.uppercase() }, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = BrandDark)

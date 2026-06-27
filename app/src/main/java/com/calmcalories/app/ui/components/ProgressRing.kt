@@ -14,6 +14,10 @@ import com.calmcalories.app.ui.theme.*
 @Composable
 fun ProgressRing(fraction: Float, modifier: Modifier = Modifier) {
     val trackColor = Divider
+    val amberColor = Amber
+    val emeraldColor = Emerald
+    val redColor = BrandRed
+
     Canvas(modifier) {
         val s = 5.dp.toPx(); val r = (size.minDimension - s) / 2f
         val tl = Offset(size.width / 2 - r, size.height / 2 - r); val sz = Size(r * 2, r * 2)
@@ -22,9 +26,9 @@ fun ProgressRing(fraction: Float, modifier: Modifier = Modifier) {
         drawArc(trackColor, -90f, 360f, false, tl, sz, style = Stroke(s, cap = StrokeCap.Round))
         
         val activeColor = when {
-            fraction < 0.8f -> Amber
-            fraction <= 1.0f -> Emerald
-            else -> BrandRed
+            fraction < 0.8f -> amberColor
+            fraction <= 1.0f -> emeraldColor
+            else -> redColor
         }
         
         // Normal target zone (up to 100%)

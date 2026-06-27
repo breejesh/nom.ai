@@ -10,6 +10,7 @@ import com.calmcalories.app.data.AppRepository
 import com.calmcalories.app.model.ActivityLevel
 import com.calmcalories.app.model.InferenceBackend
 import com.calmcalories.app.model.MealEntry
+import com.calmcalories.app.model.ChatMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -319,6 +320,117 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun updateDarkTheme(enabled: Boolean) {
         viewModelScope.launch { repository.setDarkTheme(enabled) }
+    }
+
+    val chatMessages: StateFlow<List<ChatMessage>> = repository.observeChatMessages()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private val _isCoachBusy = MutableStateFlow(false)
+    val isCoachBusy = _isCoachBusy.asStateFlow()
+
+    fun sendMessageToCoach(text: String) {
+        if (text.isBlank()) return
+        viewModelScope.launch {
+            val userMsg = ChatMessage(text = text, isUser = true)
+            val currentList = chatMessages.value.toMutableList()
+            currentList.add(userMsg)
+            repository.saveChatMessages(currentList)
+            
+            _isCoachBusy.value = true
+            
+            val uName = userName.value
+            val target = dailyGoal.value
+            val weight = weightKg.value
+            val height = heightCm.value
+            val ageVal = age.value
+            val act = activityLevel.value.label
+            val mealsList = meals.value
+            
+            val systemBrief = getCoachSystemPrompt(uName, target, weight, height, ageVal, act, mealsList)
+            val contextText = currentList.takeLast(6).joinToString("\n") { msg ->
+                if (msg.isUser) "User: ${msg.text}" else "Eucalyptus: ${msg.text}"
+            }
+            
+            val fullPrompt = "$systemBrief\n\nDialogue History:\n$contextText\n\nEucalyptus:"
+            
+            val responseResult = withContext(Dispatchers.IO) {
+                runCatching {
+                    gemmaService.initializeIfNeeded(backend.value).getOrThrow()
+                    gemmaService.sendPrompt(fullPrompt, backend.value).getOrThrow()
+                }
+            }
+            
+            responseResult.fold(
+                onSuccess = { reply ->
+                    val cleanReply = reply.trim()
+                        .removePrefix("Eucalyptus:")
+                        .removePrefix("System:")
+                        .trim()
+                    
+                    val coachMsg = ChatMessage(text = cleanReply, isUser = false)
+                    val updatedList = chatMessages.value.toMutableList()
+                    updatedList.add(coachMsg)
+                    repository.saveChatMessages(updatedList)
+                },
+                onFailure = { err ->
+                    val errorMsg = ChatMessage(text = "Eucalyptus was unable to process your request offline. Please verify that your local model is fully downloaded inside Settings.", isUser = false)
+                    val updatedList = chatMessages.value.toMutableList()
+                    updatedList.add(errorMsg)
+                    repository.saveChatMessages(updatedList)
+                }
+            )
+            
+            _isCoachBusy.value = false
+        }
+    }
+
+    fun clearChatHistory() {
+        viewModelScope.launch {
+            repository.saveChatMessages(emptyList())
+        }
+    }
+
+    private fun getCoachSystemPrompt(
+        userName: String,
+        dailyGoal: Int,
+        weightKg: Float,
+        heightCm: Float,
+        age: Int,
+        activityLevel: String,
+        meals: List<MealEntry>
+    ): String {
+        val today = startOfDay(System.currentTimeMillis())
+        val todayMeals = meals.filter { it.createdAt >= today }
+        val totalCalsToday = todayMeals.sumOf { it.calories }
+        
+        val mealsSummary = todayMeals.joinToString(", ") { meal ->
+            "${meal.name} (${meal.calories} kcal)"
+        }
+        
+        return buildString {
+            append("System: You are Eucalyptus, a warm, wise, and private on-device health & nutrition coach. ")
+            append("Provide brief, encouraging, actionable health advice. Keep answers under 4 sentences. ")
+            append("Do not make medical prescriptions; focus on nutrition, habits, and mindfulness. ")
+            append("User Profile: ")
+            if (userName.isNotBlank()) append("Name: $userName, ")
+            append("Daily Calorie Target: $dailyGoal kcal, ")
+            if (weightKg > 0) append("Weight: $weightKg kg, ")
+            if (heightCm > 0) append("Height: $heightCm cm, ")
+            if (age > 0) append("Age: $age years, ")
+            append("Activity Level: $activityLevel. ")
+            append("Current Intake Today: $totalCalsToday kcal logged. ")
+            if (mealsSummary.isNotBlank()) append("Meals eaten today: $mealsSummary. ")
+        }
+    }
+
+    private fun startOfDay(e: Long): Long {
+        val cal = java.util.Calendar.getInstance()
+        cal.timeInMillis = e
+        cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
+        cal.set(java.util.Calendar.MINUTE, 0)
+        cal.set(java.util.Calendar.SECOND, 0)
+        cal.set(java.util.Calendar.MILLISECOND, 0)
+        return cal.timeInMillis
     }
 
     override fun onCleared() {

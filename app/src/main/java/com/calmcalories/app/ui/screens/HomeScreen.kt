@@ -219,7 +219,7 @@ fun HomeScreen(
                 }
                 Spacer(Modifier.height(16.dp))
                 Box(Modifier.fillMaxWidth().height(44.dp).clip(RoundedCornerShape(12.dp)).background(BrandDark).clickable { showOptions = true }, contentAlignment = Alignment.Center) {
-                    Text("ADD ENTRY", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, color = Color.White, letterSpacing = 1.5.sp)
+                    Text("ADD ENTRY", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, color = BrandCard, letterSpacing = 1.5.sp)
                 }
             }
         }

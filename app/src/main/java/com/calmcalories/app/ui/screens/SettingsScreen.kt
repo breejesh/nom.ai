@@ -33,6 +33,10 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.NightsStay
+import androidx.compose.material.icons.filled.WbSunny
+import androidx.compose.material3.Icon
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -120,20 +124,49 @@ fun SettingsScreen(
             }
         }
 
-        // ── 2.5 Appearance (Appearance Toggle) ──
+        // ── 2.5 Appearance (Appearance Toggle Segment) ──
         SCard {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("APPEARANCE", fontSize = 9.sp, fontWeight = FontWeight.ExtraBold, color = TextMuted, letterSpacing = 1.5.sp)
                 Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(BrandSurface)
+                        .border(0.5.dp, Divider, RoundedCornerShape(12.dp))
+                        .padding(3.dp),
+                    horizontalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
-                    Column {
-                        Text("Dark Theme", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = BrandDark)
-                        Text("Switch to a warm night color palette", fontSize = 11.sp, color = TextMuted)
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(if (!isDarkTheme) BrandCard else Color.Transparent)
+                            .then(if (!isDarkTheme) Modifier.border(0.5.dp, Divider, RoundedCornerShape(10.dp)) else Modifier)
+                            .clickable { onDarkThemeChange(false) }
+                            .padding(vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Icon(Icons.Default.WbSunny, contentDescription = null, tint = if (!isDarkTheme) Amber else TextMuted, modifier = Modifier.size(14.dp))
+                            Text("DAY", fontSize = 9.sp, fontWeight = FontWeight.ExtraBold, color = if (!isDarkTheme) BrandDark else TextMuted, letterSpacing = 0.5.sp)
+                        }
                     }
-                    CustomSwitch(checked = isDarkTheme, onCheckedChange = onDarkThemeChange)
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(if (isDarkTheme) BrandCard else Color.Transparent)
+                            .then(if (isDarkTheme) Modifier.border(0.5.dp, Divider, RoundedCornerShape(10.dp)) else Modifier)
+                            .clickable { onDarkThemeChange(true) }
+                            .padding(vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Icon(Icons.Default.NightsStay, contentDescription = null, tint = if (isDarkTheme) Amber else TextMuted, modifier = Modifier.size(14.dp))
+                            Text("NIGHT", fontSize = 9.sp, fontWeight = FontWeight.ExtraBold, color = if (isDarkTheme) BrandDark else TextMuted, letterSpacing = 0.5.sp)
+                        }
+                    }
                 }
             }
         }
@@ -311,25 +344,4 @@ fun SettingsScreen(
     }
 }
 
-@Composable
-private fun CustomSwitch(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
-    val trackColor = if (checked) Emerald else Divider
-    val thumbColor = if (checked) Color.White else TextMuted
-    val thumbOffset by animateDpAsState(targetValue = if (checked) 20.dp else 0.dp, label = "switch")
-    Box(
-        modifier = Modifier
-            .size(width = 44.dp, height = 24.dp)
-            .clip(CircleShape)
-            .background(trackColor)
-            .clickable { onCheckedChange(!checked) }
-            .padding(2.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(20.dp)
-                .offset(x = thumbOffset)
-                .clip(CircleShape)
-                .background(thumbColor)
-        )
-    }
-}
+

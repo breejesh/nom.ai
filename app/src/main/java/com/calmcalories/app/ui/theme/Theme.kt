@@ -6,11 +6,6 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
-// Constant branding accents (remain static in light & dark modes)
-val Amber = Color(0xFFD9B991)        // Soft Champagne Gold
-val Emerald = Color(0xFF637D6E)      // Soft Sage Green / Eucalyptus
-val BrandRed = Color(0xFF99625A)     // Soft Terracotta / Rose Wood
-
 // Light Mode Base Colors
 val BrandDarkLight = Color(0xFF1E1A16)
 val BrandCardLight = Color(0xFFFAF8F5)
@@ -32,6 +27,7 @@ val DividerDarkColor = Color(0xFF28231E)    // Deep warm line
 val DividerLightDark = Color(0xFF1E1A17)    // Faint dark separator line
 
 class AppColors(
+    val isDark: Boolean,
     val brandDark: Color,
     val brandCard: Color,
     val brandSurface: Color,
@@ -43,6 +39,7 @@ class AppColors(
 )
 
 private val LightColors = AppColors(
+    isDark = false,
     brandDark = BrandDarkLight,
     brandCard = BrandCardLight,
     brandSurface = BrandSurfaceLight,
@@ -54,6 +51,7 @@ private val LightColors = AppColors(
 )
 
 private val DarkColors = AppColors(
+    isDark = true,
     brandDark = BrandDarkDark,
     brandCard = BrandCardDark,
     brandSurface = BrandSurfaceDark,
@@ -80,6 +78,22 @@ fun CalmCaloriesTheme(isDark: Boolean, content: @Composable () -> Unit) {
         content()
     }
 }
+
+// Dynamic theme-aware status colors
+val Emerald: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = if (AppTheme.colors.isDark) Color(0xFF85B09A) else Color(0xFF637D6E)
+
+val Amber: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = if (AppTheme.colors.isDark) Color(0xFFE3C9A8) else Color(0xFFD9B991)
+
+val BrandRed: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = if (AppTheme.colors.isDark) Color(0xFFC57E75) else Color(0xFF99625A)
 
 // Dynamically resolved color values at composition call-site
 val BrandDark: Color
@@ -122,4 +136,4 @@ val DividerLight: Color
     @ReadOnlyComposable
     get() = AppTheme.colors.dividerLight
 
-enum class Tab { Home, Stats, Journal, Settings }
+enum class Tab { Home, Stats, Coach, Journal, Settings }

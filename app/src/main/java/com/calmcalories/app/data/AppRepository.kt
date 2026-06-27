@@ -6,6 +6,7 @@ import com.calmcalories.app.model.ActivityLevel
 import com.calmcalories.app.model.FoodItem
 import com.calmcalories.app.model.InferenceBackend
 import com.calmcalories.app.model.MealEntry
+import com.calmcalories.app.model.ChatMessage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -24,7 +25,8 @@ class AppRepository(private val db: AppDatabase) {
                             calories = obj.getInt("calories"),
                             proteinGrams = obj.optInt("proteinGrams", 0),
                             carbsGrams = obj.optInt("carbsGrams", 0),
-                            fatGrams = obj.optInt("fatGrams", 0)
+                            fatGrams = obj.optInt("fatGrams", 0),
+                            sugarGrams = obj.optInt("sugarGrams", 0)
                         )
                     }
                 }.getOrDefault(emptyList())
@@ -43,6 +45,7 @@ class AppRepository(private val db: AppDatabase) {
                     put("proteinGrams", item.proteinGrams)
                     put("carbsGrams", item.carbsGrams)
                     put("fatGrams", item.fatGrams)
+                    put("sugarGrams", item.sugarGrams)
                 })
             }
         }.toString()
@@ -65,7 +68,8 @@ class AppRepository(private val db: AppDatabase) {
                     calories = obj.getInt("calories"),
                     proteinGrams = obj.optInt("proteinGrams", 0),
                     carbsGrams = obj.optInt("carbsGrams", 0),
-                    fatGrams = obj.optInt("fatGrams", 0)
+                    fatGrams = obj.optInt("fatGrams", 0),
+                    sugarGrams = obj.optInt("sugarGrams", 0)
                 )
             }
         }.getOrDefault(emptyList())
@@ -96,11 +100,13 @@ class AppRepository(private val db: AppDatabase) {
                 val scaledProtein = kotlin.math.round(item.proteinGrams * ratio).toInt()
                 val scaledCarbs = kotlin.math.round(item.carbsGrams * ratio).toInt()
                 val scaledFat = kotlin.math.round(item.fatGrams * ratio).toInt()
+                val scaledSugar = kotlin.math.round(item.sugarGrams * ratio).toInt()
                 item.copy(
                     calories = scaledCals,
                     proteinGrams = scaledProtein,
                     carbsGrams = scaledCarbs,
-                    fatGrams = scaledFat
+                    fatGrams = scaledFat,
+                    sugarGrams = scaledSugar
                 )
             }
         }
@@ -114,6 +120,7 @@ class AppRepository(private val db: AppDatabase) {
                     put("proteinGrams", item.proteinGrams)
                     put("carbsGrams", item.carbsGrams)
                     put("fatGrams", item.fatGrams)
+                    put("sugarGrams", item.sugarGrams)
                 })
             }
         }.toString()
@@ -207,6 +214,43 @@ class AppRepository(private val db: AppDatabase) {
         db.settingDao().upsert(SettingEntity(KEY_DARK_THEME, enabled.toString()))
     }
 
+    // ── Chat History ──
+    fun observeChatMessages(): Flow<List<ChatMessage>> {
+        return db.settingDao().observeByKey(KEY_CHAT_HISTORY)
+            .map { setting ->
+                val valStr = setting?.value
+                if (valStr.isNullOrBlank()) return@map emptyList<ChatMessage>()
+                runCatching {
+                    val arr = org.json.JSONArray(valStr)
+                    (0 until arr.length()).map { i ->
+                        val obj = arr.getJSONObject(i)
+                        ChatMessage(
+                            id = obj.optString("id", java.util.UUID.randomUUID().toString()),
+                            text = obj.getString("text"),
+                            isUser = obj.getBoolean("isUser"),
+                            timestamp = obj.getLong("timestamp")
+                        )
+                    }
+                }.getOrDefault(emptyList())
+            }
+    }
+
+    suspend fun saveChatMessages(messages: List<ChatMessage>) {
+        val thirtyDaysAgo = System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000)
+        val filtered = messages.filter { it.timestamp >= thirtyDaysAgo }
+        val json = org.json.JSONArray().apply {
+            filtered.forEach { msg ->
+                put(org.json.JSONObject().apply {
+                    put("id", msg.id)
+                    put("text", msg.text)
+                    put("isUser", msg.isUser)
+                    put("timestamp", msg.timestamp)
+                })
+            }
+        }.toString()
+        db.settingDao().upsert(SettingEntity(KEY_CHAT_HISTORY, json))
+    }
+
     companion object {
         private const val KEY_DAILY_GOAL = "daily_goal"
         private const val KEY_BACKEND = "inference_backend"
@@ -216,5 +260,6 @@ class AppRepository(private val db: AppDatabase) {
         private const val KEY_ACTIVITY = "activity_level"
         private const val KEY_AGE = "user_age"
         private const val KEY_DARK_THEME = "dark_theme"
+        private const val KEY_CHAT_HISTORY = "chat_history"
     }
 }

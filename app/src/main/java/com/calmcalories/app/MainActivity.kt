@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -128,6 +129,16 @@ private fun CalmCaloriesApp(vm: AppViewModel) {
                         onUpdateMeal = vm::updateMeal
                     )
                     Tab.Stats -> StatsScreen(meals, dailyGoal)
+                    Tab.Coach -> {
+                        val chatMsgs by vm.chatMessages.collectAsState()
+                        val isCoachBusy by vm.isCoachBusy.collectAsState()
+                        CoachScreen(
+                            messages = chatMsgs,
+                            isBusy = isCoachBusy,
+                            onSendMessage = vm::sendMessageToCoach,
+                            onClearHistory = vm::clearChatHistory
+                        )
+                    }
                     Tab.Journal -> JournalScreen(meals, onDeleteMeal = vm::deleteMeal, onUpdateMeal = vm::updateMeal)
                     Tab.Settings -> SettingsScreen(
                         userName = userName,

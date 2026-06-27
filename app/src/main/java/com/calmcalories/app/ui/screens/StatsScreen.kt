@@ -3,6 +3,7 @@ package com.calmcalories.app.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -45,33 +46,94 @@ import java.util.Date
 import java.util.Locale
 import kotlin.math.min
 
+enum class StatsParam(val label: String, val suffix: String) {
+    Calories("Calories", "kcal"),
+    Protein("Protein", "g"),
+    Carbs("Carbs", "g"),
+    Fat("Fat", "g"),
+    Sugar("Sugar", "g")
+}
+
 private enum class ViewMode { Day, Week, Month }
 
 @Composable
 fun StatsScreen(meals: List<MealEntry>, dailyGoal: Int) {
     var viewMode by remember { mutableStateOf(ViewMode.Month) }
     var currentEpoch by remember { mutableStateOf(System.currentTimeMillis()) }
+    var selectedParam by remember { mutableStateOf(StatsParam.Calories) }
+
+    val currentTarget = remember(selectedParam, dailyGoal) { getTargetFor(selectedParam, dailyGoal) }
 
     val rangeStart = remember(viewMode, currentEpoch) { when (viewMode) { ViewMode.Day -> startOfDay(currentEpoch); ViewMode.Week -> startOfWeek(currentEpoch); ViewMode.Month -> startOfMonth(currentEpoch) } }
     val rangeEnd = remember(viewMode, currentEpoch) { when (viewMode) { ViewMode.Day -> endOfDay(currentEpoch); ViewMode.Week -> endOfWeek(currentEpoch); ViewMode.Month -> endOfMonth(currentEpoch) } }
 
     val mealsInRange = remember(meals, rangeStart, rangeEnd) { meals.filter { it.createdAt in rangeStart..rangeEnd } }
-    val daySummaries = remember(mealsInRange) {
+    val daySummaries = remember(mealsInRange, selectedParam) {
         val m = mutableMapOf<String, Int>()
-        mealsInRange.forEach { meal -> val k = dayKey(meal.createdAt); m[k] = (m[k] ?: 0) + meal.calories }
+        mealsInRange.forEach { meal -> val k = dayKey(meal.createdAt); m[k] = (m[k] ?: 0) + meal.getValueFor(selectedParam) }
         m
     }
-    val avgCal = remember(daySummaries) { daySummaries.values.filter { it > 0 }.let { if (it.isEmpty()) 0 else it.sum() / it.size } }
-    val ratio = avgCal.toFloat() / dailyGoal
-    val statusColor = if (ratio > 1f) BrandRed else if (ratio >= 0.8f) Emerald else Amber
-    val statusLabel = if (ratio > 1f) "Cap Reached" else if (ratio >= 0.8f) "Optimal" else "Replenishing"
+    val avgVal = remember(daySummaries) { daySummaries.values.filter { it > 0 }.let { if (it.isEmpty()) 0 else it.sum() / it.size } }
 
-    Column(Modifier.fillMaxSize().background(BrandSurface).verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
-        Column(Modifier.padding(horizontal = 4.dp)) {
-            Text("STATS", fontSize = 16.sp, fontWeight = FontWeight.Black, color = BrandDark, letterSpacing = 1.sp)
-            Text("INTELLIGENCE DASHBOARD", fontSize = 9.sp, fontWeight = FontWeight.Black, color = TextMuted, letterSpacing = 1.5.sp)
+    val ratio = avgVal.toFloat() / currentTarget.toFloat()
+
+    val statusColor = when (selectedParam) {
+        StatsParam.Calories -> if (ratio > 1f) BrandRed else if (ratio >= 0.8f) Emerald else Amber
+        StatsParam.Protein -> Emerald
+        StatsParam.Carbs -> Amber
+        StatsParam.Fat -> BrandRed
+        StatsParam.Sugar -> if (ratio > 1f) BrandRed else if (ratio >= 0.8f) Amber else Emerald
+    }
+
+    val statusLabel = when (selectedParam) {
+        StatsParam.Sugar -> if (ratio > 1f) "High Sugar" else if (ratio >= 0.8f) "Warning" else "Low Sugar"
+        else -> if (ratio > 1f) "Cap Reached" else if (ratio >= 0.8f) "Optimal" else "Replenishing"
+    }
+
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(BrandSurface)
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.padding(horizontal = 4.dp)) {
+                Text("STATS", fontSize = 16.sp, fontWeight = FontWeight.Black, color = BrandDark, letterSpacing = 1.sp)
+                Text("INTELLIGENCE DASHBOARD", fontSize = 9.sp, fontWeight = FontWeight.Black, color = TextMuted, letterSpacing = 1.5.sp)
+            }
         }
 
+        // ── Parameter Selection horizontal chips row ──
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            StatsParam.entries.forEach { param ->
+                val active = selectedParam == param
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(if (active) BrandDark else BrandCard)
+                        .border(0.5.dp, Divider, RoundedCornerShape(12.dp))
+                        .clickable { selectedParam = param }
+                        .padding(vertical = 8.dp, horizontal = 14.dp)
+                ) {
+                    Text(
+                        param.label.uppercase(),
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = if (active) Color.White else TextMuted,
+                        letterSpacing = 1.sp
+                    )
+                }
+            }
+        }
+
+        // ── View Mode Selector ──
         Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(DividerLight).border(0.5.dp, Divider, RoundedCornerShape(16.dp)).padding(4.dp)) {
             ViewMode.entries.forEach { mode ->
                 val active = viewMode == mode
@@ -100,28 +162,28 @@ fun StatsScreen(meals: List<MealEntry>, dailyGoal: Int) {
         Row(Modifier.fillMaxWidth().height(IntrinsicSize.Max), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             StatCard(
                 modifier = Modifier.weight(1f).fillMaxHeight(),
-                label = if (viewMode == ViewMode.Day) "TOTAL KCAL" else "AVERAGE KCAL",
-                value = "$avgCal kcal",
+                label = if (viewMode == ViewMode.Day) "TOTAL ${selectedParam.label.uppercase()}" else "AVERAGE ${selectedParam.label.uppercase()}",
+                value = "$avgVal ${selectedParam.suffix}",
                 valueColor = statusColor
             )
             StatCard(
                 modifier = Modifier.weight(1f).fillMaxHeight(),
-                label = "CYCLE ZONE",
+                label = if (selectedParam == StatsParam.Sugar) "SUGAR LEVEL" else "CYCLE ZONE",
                 value = statusLabel,
                 valueColor = statusColor
             )
         }
 
         when (viewMode) {
-            ViewMode.Month -> MonthCalendar(currentEpoch, daySummaries, dailyGoal) { e -> currentEpoch = e; viewMode = ViewMode.Day }
-            ViewMode.Week -> WeekChart(rangeStart, daySummaries, dailyGoal) { e -> currentEpoch = e; viewMode = ViewMode.Day }
-            ViewMode.Day -> DayChart(mealsInRange, dailyGoal, statusColor)
+            ViewMode.Month -> MonthCalendar(currentEpoch, daySummaries, currentTarget) { e -> currentEpoch = e; viewMode = ViewMode.Day }
+            ViewMode.Week -> WeekChart(rangeStart, daySummaries, currentTarget) { e -> currentEpoch = e; viewMode = ViewMode.Day }
+            ViewMode.Day -> DayChart(mealsInRange, currentTarget, statusColor, selectedParam)
         }
     }
 }
 
 @Composable
-private fun MonthCalendar(currentEpoch: Long, daySummaries: Map<String, Int>, dailyGoal: Int, onDaySelect: (Long) -> Unit) {
+private fun MonthCalendar(currentEpoch: Long, daySummaries: Map<String, Int>, target: Int, onDaySelect: (Long) -> Unit) {
     val daysInMonth = Calendar.getInstance().apply { timeInMillis = currentEpoch }.getActualMaximum(Calendar.DAY_OF_MONTH)
     val firstDow = Calendar.getInstance().apply { timeInMillis = currentEpoch; set(Calendar.DAY_OF_MONTH, 1) }.get(Calendar.DAY_OF_WEEK) - 1
     val rows = (firstDow + daysInMonth + 6) / 7
@@ -136,7 +198,7 @@ private fun MonthCalendar(currentEpoch: Long, daySummaries: Map<String, Int>, da
                     if (dayNum < 1 || dayNum > daysInMonth) { Box(Modifier.size(36.dp)) } else {
                         val epoch = Calendar.getInstance().apply { timeInMillis = currentEpoch; set(Calendar.DAY_OF_MONTH, dayNum) }.timeInMillis
                         val kcal = daySummaries[dayKey(epoch)] ?: 0
-                        val r = kcal.toFloat() / dailyGoal
+                        val r = kcal.toFloat() / target
                         val color = if (kcal == 0) null else if (r > 1f) BrandRed else if (r >= 0.8f) Emerald else Amber
                         Box(Modifier.size(36.dp).clip(CircleShape).background(color ?: BrandSurface).border(0.5.dp, if (color == null) Divider else Color.Transparent, CircleShape).clickable { onDaySelect(epoch) }, contentAlignment = Alignment.Center) {
                             Text("$dayNum", fontSize = 10.sp, fontWeight = FontWeight.Black, color = if (color != null) Color.White else TextFaint)
@@ -149,14 +211,14 @@ private fun MonthCalendar(currentEpoch: Long, daySummaries: Map<String, Int>, da
 }
 
 @Composable
-private fun WeekChart(rangeStart: Long, daySummaries: Map<String, Int>, dailyGoal: Int, onDaySelect: (Long) -> Unit) {
-    val maxVal = (daySummaries.values.maxOrNull() ?: dailyGoal).coerceAtLeast(dailyGoal).toFloat()
+private fun WeekChart(rangeStart: Long, daySummaries: Map<String, Int>, target: Int, onDaySelect: (Long) -> Unit) {
+    val maxVal = (daySummaries.values.maxOrNull() ?: target).coerceAtLeast(target).toFloat()
     Row(Modifier.fillMaxWidth().height(180.dp), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.Bottom) {
         for (i in 0..6) {
             val epoch = rangeStart + i * 86400000L
             val kcal = daySummaries[dayKey(epoch)] ?: 0
             val frac = if (kcal == 0) 0.02f else min(kcal.toFloat() / maxVal, 1f)
-            val r = kcal.toFloat() / dailyGoal
+            val r = kcal.toFloat() / target
             val barColor = if (kcal == 0) BrandSurface else if (r > 1f) BrandRed else if (r >= 0.8f) Emerald else Amber
             val lbl = SimpleDateFormat("EEE", Locale.getDefault()).format(Date(epoch)).take(1)
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Bottom) {
@@ -172,13 +234,13 @@ private fun WeekChart(rangeStart: Long, daySummaries: Map<String, Int>, dailyGoa
 }
 
 @Composable
-private fun DayChart(mealsInRange: List<MealEntry>, dailyGoal: Int, statusColor: Color) {
-    val hourMap = remember(mealsInRange) {
+private fun DayChart(mealsInRange: List<MealEntry>, target: Int, statusColor: Color, param: StatsParam) {
+    val hourMap = remember(mealsInRange, param) {
         val m = mutableMapOf<Int, Int>()
-        mealsInRange.forEach { meal -> val h = Calendar.getInstance().apply { timeInMillis = meal.createdAt }.get(Calendar.HOUR_OF_DAY); m[h] = (m[h] ?: 0) + meal.calories }
+        mealsInRange.forEach { meal -> val h = Calendar.getInstance().apply { timeInMillis = meal.createdAt }.get(Calendar.HOUR_OF_DAY); m[h] = (m[h] ?: 0) + meal.getValueFor(param) }
         m
     }
-    val maxH = (hourMap.values.maxOrNull() ?: (dailyGoal / 4)).coerceAtLeast(200).toFloat()
+    val maxH = (hourMap.values.maxOrNull() ?: (target / 4)).coerceAtLeast(10).toFloat()
     Row(Modifier.fillMaxWidth().height(160.dp), horizontalArrangement = Arrangement.spacedBy(1.dp), verticalAlignment = Alignment.Bottom) {
         for (h in 0..23) {
             val kcal = hourMap[h] ?: 0
@@ -191,6 +253,26 @@ private fun DayChart(mealsInRange: List<MealEntry>, dailyGoal: Int, statusColor:
                 Text(if (h % 4 == 0) "$h" else "", fontSize = 6.sp, fontWeight = FontWeight.Black, color = TextFaint)
             }
         }
+    }
+}
+
+private fun MealEntry.getValueFor(param: StatsParam): Int {
+    return when (param) {
+        StatsParam.Calories -> this.calories
+        StatsParam.Protein -> this.foodItems.sumOf { it.proteinGrams }
+        StatsParam.Carbs -> this.foodItems.sumOf { it.carbsGrams }
+        StatsParam.Fat -> this.foodItems.sumOf { it.fatGrams }
+        StatsParam.Sugar -> this.foodItems.sumOf { it.sugarGrams }
+    }
+}
+
+private fun getTargetFor(param: StatsParam, dailyGoal: Int): Int {
+    return when (param) {
+        StatsParam.Calories -> dailyGoal
+        StatsParam.Protein -> (dailyGoal * 0.25f / 4f).toInt()
+        StatsParam.Carbs -> (dailyGoal * 0.50f / 4f).toInt()
+        StatsParam.Fat -> (dailyGoal * 0.25f / 9f).toInt()
+        StatsParam.Sugar -> (dailyGoal * 0.08f / 4f).toInt()
     }
 }
 

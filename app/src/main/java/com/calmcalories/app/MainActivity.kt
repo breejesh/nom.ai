@@ -96,21 +96,11 @@ private fun CalmCaloriesApp(vm: AppViewModel) {
 
     val ctx = LocalContext.current
 
-    val exportLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/zip")
-    ) { uri ->
-        if (uri != null) {
-            vm.exportBackupToUri(ctx, uri)
-        }
-    }
-
-    val importLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
-    ) { uri ->
-        if (uri != null) {
-            vm.importBackupFromUri(ctx, uri)
-        }
-    }
+    val showRestoreConfirm by vm.showRestoreConfirm.collectAsState()
+    val showBackupSuccess by vm.showBackupSuccess.collectAsState()
+    val showNoBackup by vm.showNoBackup.collectAsState()
+    val showPermissionRequest by vm.showPermissionRequest.collectAsState()
+    val backupErrorText by vm.backupErrorText.collectAsState()
 
     LaunchedEffect(isDarkTheme) {
         val activity = ctx as? ComponentActivity ?: return@LaunchedEffect
@@ -187,8 +177,8 @@ private fun CalmCaloriesApp(vm: AppViewModel) {
                         suggestedCalories = suggestedCalories,
                         isDarkTheme = isDarkTheme,
                         onDarkThemeChange = vm::updateDarkTheme,
-                        onExportBackup = { exportLauncher.launch("nomai_backup.zip") },
-                        onImportBackup = { importLauncher.launch(arrayOf("application/zip", "application/octet-stream")) }
+                        onExportBackup = { vm.handleExportClick(ctx) },
+                        onImportBackup = { vm.handleImportClick(ctx) }
                     )
                 }
             }
@@ -197,6 +187,96 @@ private fun CalmCaloriesApp(vm: AppViewModel) {
 
         if (isBusy) {
             AiProcessingDialog(processingPrompt, processingImageBytes)
+        }
+
+        if (showPermissionRequest) {
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = vm::dismissBackupDialogs,
+                title = { Text("Storage Access Required", fontWeight = FontWeight.Bold, color = BrandDark) },
+                text = { Text("NomAI requires All Files Access to save and restore backups directly from your device's Downloads directory.") },
+                confirmButton = {
+                    androidx.compose.material3.TextButton(
+                        onClick = {
+                            vm.dismissBackupDialogs()
+                            vm.requestStoragePermission(ctx)
+                        }
+                    ) {
+                        Text("GRANT", color = Emerald, fontWeight = FontWeight.Bold)
+                    }
+                },
+                dismissButton = {
+                    androidx.compose.material3.TextButton(onClick = vm::dismissBackupDialogs) {
+                        Text("CANCEL", color = TextMuted)
+                    }
+                },
+                containerColor = BrandCard
+            )
+        }
+
+        if (showRestoreConfirm) {
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = vm::dismissBackupDialogs,
+                title = { Text("Restore Backup?", fontWeight = FontWeight.Bold, color = BrandDark) },
+                text = { Text("This will overwrite all current settings and meal history with the backup file. The app will restart automatically. Proceed?") },
+                confirmButton = {
+                    androidx.compose.material3.TextButton(
+                        onClick = {
+                            vm.dismissBackupDialogs()
+                            vm.performImport(ctx)
+                        }
+                    ) {
+                        Text("RESTORE", color = BrandRed, fontWeight = FontWeight.Bold)
+                    }
+                },
+                dismissButton = {
+                    androidx.compose.material3.TextButton(onClick = vm::dismissBackupDialogs) {
+                        Text("CANCEL", color = TextMuted)
+                    }
+                },
+                containerColor = BrandCard
+            )
+        }
+
+        if (showBackupSuccess) {
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = vm::dismissBackupDialogs,
+                title = { Text("Backup Successful", fontWeight = FontWeight.Bold, color = BrandDark) },
+                text = { Text("Your data and settings have been backed up directly to: Downloads/nomai_backup.zip\n\nGoogle Drive will automatically sync this file if folder syncing is enabled.") },
+                confirmButton = {
+                    androidx.compose.material3.TextButton(onClick = vm::dismissBackupDialogs) {
+                        Text("OK", color = Emerald, fontWeight = FontWeight.Bold)
+                    }
+                },
+                containerColor = BrandCard
+            )
+        }
+
+        if (showNoBackup) {
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = vm::dismissBackupDialogs,
+                title = { Text("No Backup Found", fontWeight = FontWeight.Bold, color = BrandDark) },
+                text = { Text("Ensure the backup file 'nomai_backup.zip' is placed inside your phone's public 'Downloads' directory first.") },
+                confirmButton = {
+                    androidx.compose.material3.TextButton(onClick = vm::dismissBackupDialogs) {
+                        Text("OK", color = BrandDark, fontWeight = FontWeight.Bold)
+                    }
+                },
+                containerColor = BrandCard
+            )
+        }
+
+        if (backupErrorText != null) {
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = vm::dismissBackupDialogs,
+                title = { Text("Backup Error", fontWeight = FontWeight.Bold, color = BrandRed) },
+                text = { Text("An error occurred during the backup operation:\n$backupErrorText") },
+                confirmButton = {
+                    androidx.compose.material3.TextButton(onClick = vm::dismissBackupDialogs) {
+                        Text("OK", color = BrandDark, fontWeight = FontWeight.Bold)
+                    }
+                },
+                containerColor = BrandCard
+            )
         }
     }
 }

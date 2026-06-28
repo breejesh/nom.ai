@@ -46,6 +46,30 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val _downloadError = MutableStateFlow<String?>(null)
     val downloadError = _downloadError.asStateFlow()
 
+    // Cloud Backup & Restore Dialog States
+    private val _showRestoreConfirm = MutableStateFlow(false)
+    val showRestoreConfirm = _showRestoreConfirm.asStateFlow()
+
+    private val _showBackupSuccess = MutableStateFlow(false)
+    val showBackupSuccess = _showBackupSuccess.asStateFlow()
+
+    private val _showNoBackup = MutableStateFlow(false)
+    val showNoBackup = _showNoBackup.asStateFlow()
+
+    private val _showPermissionRequest = MutableStateFlow(false)
+    val showPermissionRequest = _showPermissionRequest.asStateFlow()
+
+    private val _backupErrorText = MutableStateFlow<String?>(null)
+    val backupErrorText = _backupErrorText.asStateFlow()
+
+    fun dismissBackupDialogs() {
+        _showRestoreConfirm.value = false
+        _showBackupSuccess.value = false
+        _showNoBackup.value = false
+        _showPermissionRequest.value = false
+        _backupErrorText.value = null
+    }
+
     fun downloadModel(downloadUrl: String) {
         viewModelScope.launch {
             _downloadError.value = null
@@ -440,21 +464,77 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
 
 
-    fun exportBackupToUri(context: Context, uri: Uri) {
+    fun hasStoragePermission(context: Context): Boolean {
+        return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            android.os.Environment.isExternalStorageManager()
+        } else {
+            androidx.core.content.ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    fun requestStoragePermission(context: Context) {
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                val intent = android.content.Intent(android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
+                    data = android.net.Uri.parse("package:${context.packageName}")
+                }
+                context.startActivity(intent)
+            } else {
+                android.widget.Toast.makeText(context, "Please grant storage permission in settings.", android.widget.Toast.LENGTH_LONG).show()
+            }
+        } catch (e: Exception) {
+            android.widget.Toast.makeText(context, "Failed to open settings: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+        }
+    }
+
+    fun handleExportClick(context: Context) {
+        if (!hasStoragePermission(context)) {
+            _showPermissionRequest.value = true
+        } else {
+            performExport(context)
+        }
+    }
+
+    fun handleImportClick(context: Context) {
+        if (!hasStoragePermission(context)) {
+            _showPermissionRequest.value = true
+        } else {
+            val downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
+            val backupFile = File(downloadsDir, "nomai_backup.zip")
+            if (backupFile.exists()) {
+                _showRestoreConfirm.value = true
+            } else {
+                _showNoBackup.value = true
+            }
+        }
+    }
+
+    private fun performExport(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                // Try database checkpoint but catch failures to avoid blocking backup
                 try {
                     AppDatabase.get(context).openHelper.writableDatabase.execSQL("PRAGMA wal_checkpoint(FULL)")
                 } catch (ce: Exception) {
-                    android.util.Log.w("BackupRestore", "WAL checkpoint skipped/failed: ${ce.message}")
+                    android.util.Log.w("BackupRestore", "WAL checkpoint failed: ${ce.message}")
                 }
-                
+
                 val dbFile = context.getDatabasePath("calm_calories.db")
                 val dbShm = File(dbFile.parent, "${dbFile.name}-shm")
                 val dbWal = File(dbFile.parent, "${dbFile.name}-wal")
-                
-                context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+
+                val downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
+                if (!downloadsDir.exists()) {
+                    downloadsDir.mkdirs()
+                }
+                val targetFile = File(downloadsDir, "nomai_backup.zip")
+                if (targetFile.exists()) {
+                    targetFile.delete()
+                }
+
+                java.io.FileOutputStream(targetFile).use { outputStream ->
                     ZipOutputStream(outputStream).use { zipOut ->
                         fun addFileToZip(file: File, name: String) {
                             if (file.exists()) {
@@ -465,38 +545,44 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                                 zipOut.closeEntry()
                             }
                         }
-                        
                         addFileToZip(dbFile, "calm_calories.db")
                         addFileToZip(dbShm, "calm_calories.db-shm")
                         addFileToZip(dbWal, "calm_calories.db-wal")
                     }
                 }
+                
                 withContext(Dispatchers.Main) {
-                    android.widget.Toast.makeText(context, "Backup exported successfully!", android.widget.Toast.LENGTH_SHORT).show()
+                    _showBackupSuccess.value = true
                 }
             } catch (e: Exception) {
                 android.util.Log.e("BackupRestore", "Export failed", e)
                 withContext(Dispatchers.Main) {
-                    android.widget.Toast.makeText(context, "Export failed: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+                    _backupErrorText.value = e.message ?: "Unknown error"
                 }
             }
         }
     }
 
-    fun importBackupFromUri(context: Context, uri: Uri) {
+    fun performImport(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
+                val downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
+                val backupFile = File(downloadsDir, "nomai_backup.zip")
+                if (!backupFile.exists()) {
+                    throw java.io.FileNotFoundException("Backup file 'nomai_backup.zip' not found in Downloads folder.")
+                }
+
                 val cacheDir = context.cacheDir
                 val tempDb = File(cacheDir, "calm_calories_temp.db")
                 val tempShm = File(cacheDir, "calm_calories_temp.db-shm")
                 val tempWal = File(cacheDir, "calm_calories_temp.db-wal")
-                
+
                 if (tempDb.exists()) tempDb.delete()
                 if (tempShm.exists()) tempShm.delete()
                 if (tempWal.exists()) tempWal.delete()
-                
+
                 var hasDb = false
-                context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                backupFile.inputStream().use { inputStream ->
                     ZipInputStream(inputStream).use { zipIn ->
                         var entry = zipIn.nextEntry
                         while (entry != null) {
@@ -516,20 +602,18 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                         }
                     }
                 }
-                
+
                 if (!hasDb) {
-                    throw IllegalArgumentException("Invalid backup file: main database not found.")
+                    throw IllegalArgumentException("Invalid backup file: main database not found inside zip.")
                 }
-                
-                // Close database connection cleanly
+
                 AppDatabase.get(context).close()
                 AppDatabase.reset()
-                
+
                 val dbFile = context.getDatabasePath("calm_calories.db")
                 val dbShm = File(dbFile.parent, "${dbFile.name}-shm")
                 val dbWal = File(dbFile.parent, "${dbFile.name}-wal")
-                
-                // Overwrite files safely
+
                 fun copyFile(src: File, dest: File) {
                     if (src.exists()) {
                         src.inputStream().use { input ->
@@ -542,11 +626,11 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                         dest.delete()
                     }
                 }
-                
+
                 copyFile(tempDb, dbFile)
                 copyFile(tempShm, dbShm)
                 copyFile(tempWal, dbWal)
-                
+
                 withContext(Dispatchers.Main) {
                     android.widget.Toast.makeText(context, "Backup restored successfully! Restarting...", android.widget.Toast.LENGTH_SHORT).show()
                     val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
@@ -557,7 +641,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: Exception) {
                 android.util.Log.e("BackupRestore", "Restore failed", e)
                 withContext(Dispatchers.Main) {
-                    android.widget.Toast.makeText(context, "Import failed: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+                    _backupErrorText.value = e.message ?: "Unknown error"
                 }
             }
         }

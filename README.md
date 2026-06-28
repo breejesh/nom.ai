@@ -31,16 +31,44 @@ Most calorie tracking apps are bloated, demand monthly subscriptions, show intru
 
 ---
 
-## 📸 Screenshots
+### 🎯 Target Audience: Mindful & Casual Tracking
+
+NomAI is designed for **casual users** looking to start their fitness journey with a low-friction, zero-dependency habit.
+
+*   **Mindful & Simple:** The core focus is to make calorie tracking as quick, effortless, and private as possible. 
+*   **Precision Disclaimer:** If you require *inch-perfect precision* (such as strict clinical diets or professional bodybuilding prep), the on-device AI estimates may vary slightly. While you can easily edit all macro values and portion sizes manually inside the app to match labeling exactly, clinical precision is not the core focus of the AI extraction (though we may expand this in future versions).
+
+---
+
+## 📸 Screen Showcases
 
 > [!TIP]
-> Place your actual app mockups inside the `screenshots/` directory using these file names to display them below:
+> Place your actual app mockups inside the `screenshots/` directory using the filenames specified below to display them in this layout:
 
-<p align="center">
-  <img src="screenshots/today_dashboard.png" width="260" alt="Today Dashboard">
-  <img src="screenshots/stats_insights.png" width="260" alt="Stats Insights">
-  <img src="screenshots/settings_theme.png" width="260" alt="Settings & Appearance">
-</p>
+### Theme Adaptability
+Here is how the clean, minimalist layout shifts between the warm off-white light theme and the midnight-espresso dark theme:
+
+| Light Mode Dashboard | Dark Mode Dashboard |
+| :---: | :---: |
+| ![Light Dashboard](screenshots/dashboard_light.png) | ![Dark Dashboard](screenshots/dashboard_dark.png) |
+
+---
+
+### The Smart Adding Journey
+Tracking a meal is fully local: describe it naturally or snap a photo, review the extracted elements, and log.
+
+| 1. Describe or Snap | 2. Review Extracted Macros |
+| :---: | :---: |
+| ![Describe/Snap Dialog](screenshots/add_with_ai.png) | ![Extracted Meal Details](screenshots/extracted_details.png) |
+
+---
+
+### Insights & Settings
+Dive into weekly charts or customize your experience offline.
+
+| 3. Dynamic Stats (Calories / Macros) | 4. Appearance Controls |
+| :---: | :---: |
+| ![Stats Parameters](screenshots/stats_dashboard.png) | ![Settings Theme Toggle](screenshots/settings_appearance.png) |
 
 ---
 

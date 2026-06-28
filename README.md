@@ -3,10 +3,10 @@
 </p>
 
 <h1 align="center">NomAI</h1>
-<p align="center"><strong>World's First Free & Open-Source Offline LLM Calorie Tracker</strong></p>
+<p align="center"><strong>World's First Free & Open-Source Offline LLM based Calorie Tracker</strong></p>
 
 <p align="center">
-  <strong>A quiet-luxury, privacy-first, offline-local AI calorie advisor for Android.</strong><br>
+  <strong>A simple, privacy-first, offline-local AI calorie tracker for Android.</strong><br>
   Estimate nutrition, track goals, and analyze metrics fully on-device. No accounts, no data leaks.
 </p>
 
@@ -87,8 +87,10 @@ Dive into weekly charts or customize your experience offline.
 - 🎨 **Minimalist Design & Dark Mode**
   - Warm minimalist typography and dynamic light/dark system themes.
   - Segmented Day/Night controller in settings with WbSunny and NightsStay icon controls.
-- 🔐 **Guaranteed Privacy**
-  - Offline-first execution. No sign-ups, no cookies, and zero external cloud uploads.
+- 🔐 **Guaranteed Privacy & Data Ownership**
+  - Offline-first execution. No sign-ups, no tracking cookies, and zero background network uploads.
+  - **Auto Cloud Backups:** Seamlessly integrates with Android's system backup service, securing your history inside your personal Google Drive storage space.
+  - **On-Demand Drive Sync:** Export or import compressed backup files (`.zip`) directly to/from Google Drive or local storage on-demand.
 
 ---
 

@@ -95,6 +95,23 @@ private fun CalmCaloriesApp(vm: AppViewModel) {
     val processingImageBytes by vm.processingImageBytes.collectAsState()
 
     val ctx = LocalContext.current
+
+    val exportLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/zip")
+    ) { uri ->
+        if (uri != null) {
+            vm.exportBackupToUri(ctx, uri)
+        }
+    }
+
+    val importLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            vm.importBackupFromUri(ctx, uri)
+        }
+    }
+
     LaunchedEffect(isDarkTheme) {
         val activity = ctx as? ComponentActivity ?: return@LaunchedEffect
         activity.enableEdgeToEdge(
@@ -170,6 +187,8 @@ private fun CalmCaloriesApp(vm: AppViewModel) {
                         suggestedCalories = suggestedCalories,
                         isDarkTheme = isDarkTheme,
                         onDarkThemeChange = vm::updateDarkTheme,
+                        onExportBackup = { exportLauncher.launch("nomai_backup.zip") },
+                        onImportBackup = { importLauncher.launch(arrayOf("application/zip", "application/octet-stream")) }
                     )
                 }
             }

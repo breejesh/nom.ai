@@ -63,6 +63,8 @@ fun SettingsScreen(
     suggestedCalories: Int?,
     isDarkTheme: Boolean,
     onDarkThemeChange: (Boolean) -> Unit,
+    onExportBackup: () -> Unit,
+    onImportBackup: () -> Unit,
 ) {
     var sliderVal by remember(dailyGoal) { mutableFloatStateOf(dailyGoal.toFloat()) }
     var userNameField by remember(userName) { mutableStateOf(userName) }
@@ -333,6 +335,46 @@ fun SettingsScreen(
                         ) {
                             Text("APPLY SUGGESTION", fontSize = 11.sp, fontWeight = FontWeight.Black, color = Color.White, letterSpacing = 1.5.sp)
                         }
+                    }
+                }
+            }
+        }
+
+        // ── 4. Cloud Backups (Google Drive) ──
+        SCard {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("GOOGLE DRIVE BACKUPS", fontSize = 9.sp, fontWeight = FontWeight.ExtraBold, color = TextMuted, letterSpacing = 1.5.sp)
+                Text(
+                    "Back up your history and settings safely on your own Google Drive storage.",
+                    fontSize = 11.sp, color = TextMuted, lineHeight = 16.sp
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(40.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(BrandSurface)
+                            .border(0.5.dp, Divider, RoundedCornerShape(12.dp))
+                            .clickable { onExportBackup() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("EXPORT TO GDRIVE", fontSize = 10.sp, fontWeight = FontWeight.Black, color = BrandDark, letterSpacing = 1.sp)
+                    }
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(40.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(BrandSurface)
+                            .border(0.5.dp, Divider, RoundedCornerShape(12.dp))
+                            .clickable { onImportBackup() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("IMPORT FROM GDRIVE", fontSize = 10.sp, fontWeight = FontWeight.Black, color = BrandDark, letterSpacing = 1.sp)
                     }
                 }
             }

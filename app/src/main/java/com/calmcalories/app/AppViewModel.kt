@@ -1,6 +1,8 @@
 package com.calmcalories.app
 
 import android.app.Application
+import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.calmcalories.app.ai.GemmaLiteRtService
@@ -26,6 +28,9 @@ import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
+import java.util.zip.ZipOutputStream
 
 class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = AppRepository(AppDatabase.get(application))
@@ -431,6 +436,94 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         cal.set(java.util.Calendar.SECOND, 0)
         cal.set(java.util.Calendar.MILLISECOND, 0)
         return cal.timeInMillis
+    }
+
+    fun exportBackupToUri(context: Context, uri: Uri) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                // Force Room database checkpoint to write WAL contents to main file
+                AppDatabase.get(context).openHelper.writableDatabase.execSQL("PRAGMA wal_checkpoint(FULL)")
+                
+                val dbFile = context.getDatabasePath("calm_calories.db")
+                val dbShm = File(dbFile.parent, "${dbFile.name}-shm")
+                val dbWal = File(dbFile.parent, "${dbFile.name}-wal")
+                
+                context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                    ZipOutputStream(outputStream).use { zipOut ->
+                        fun addFileToZip(file: File, name: String) {
+                            if (file.exists()) {
+                                zipOut.putNextEntry(ZipEntry(name))
+                                file.inputStream().use { input ->
+                                    input.copyTo(zipOut)
+                                }
+                                zipOut.closeEntry()
+                            }
+                        }
+                        
+                        addFileToZip(dbFile, "calm_calories.db")
+                        addFileToZip(dbShm, "calm_calories.db-shm")
+                        addFileToZip(dbWal, "calm_calories.db-wal")
+                    }
+                }
+                withContext(Dispatchers.Main) {
+                    android.widget.Toast.makeText(context, "Backup exported successfully!", android.widget.Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    android.widget.Toast.makeText(context, "Export failed: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    fun importBackupFromUri(context: Context, uri: Uri) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                // Close database to unlock files
+                AppDatabase.get(context).close()
+                
+                val dbFile = context.getDatabasePath("calm_calories.db")
+                val dbShm = File(dbFile.parent, "${dbFile.name}-shm")
+                val dbWal = File(dbFile.parent, "${dbFile.name}-wal")
+                
+                // Clear old DB files
+                if (dbFile.exists()) dbFile.delete()
+                if (dbShm.exists()) dbShm.delete()
+                if (dbWal.exists()) dbWal.delete()
+                
+                context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                    ZipInputStream(inputStream).use { zipIn ->
+                        var entry = zipIn.nextEntry
+                        while (entry != null) {
+                            val targetFile = when (entry.name) {
+                                "calm_calories.db" -> dbFile
+                                "calm_calories.db-shm" -> dbShm
+                                "calm_calories.db-wal" -> dbWal
+                                else -> null
+                            }
+                            if (targetFile != null) {
+                                targetFile.outputStream().use { output ->
+                                    zipIn.copyTo(output)
+                                }
+                            }
+                            zipIn.closeEntry()
+                            entry = zipIn.nextEntry
+                        }
+                    }
+                }
+                
+                withContext(Dispatchers.Main) {
+                    android.widget.Toast.makeText(context, "Backup restored successfully! Restarting...", android.widget.Toast.LENGTH_SHORT).show()
+                    val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+                    intent?.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                    context.startActivity(intent)
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    android.widget.Toast.makeText(context, "Import failed: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+                }
+            }
+        }
     }
 
     override fun onCleared() {

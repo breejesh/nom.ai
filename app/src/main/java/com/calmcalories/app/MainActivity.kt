@@ -4,8 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -99,26 +97,12 @@ private fun CalmCaloriesApp(vm: AppViewModel) {
     val ctx = LocalContext.current
 
     val showRestoreConfirm by vm.showRestoreConfirm.collectAsState()
-    val showBackupSuccess by vm.showBackupSuccess.collectAsState()
-    val showNoBackup by vm.showNoBackup.collectAsState()
-    val showPermissionRequest by vm.showPermissionRequest.collectAsState()
-    val showGoogleSignInPrompt by vm.showGoogleSignInPrompt.collectAsState()
-    val backupErrorText by vm.backupErrorText.collectAsState()
 
-    val signInLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        vm.dismissBackupDialogs()
-    }
-
-    LaunchedEffect(showGoogleSignInPrompt) {
-        if (showGoogleSignInPrompt) {
-            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestEmail()
-                .requestScopes(com.google.android.gms.common.api.Scope("https://www.googleapis.com/auth/drive.appdata"))
-                .build()
-            val signInClient = GoogleSignIn.getClient(ctx, gso)
-            signInLauncher.launch(signInClient.signInIntent)
+    val importLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            vm.handleImportFileSelected(uri)
         }
     }
 
@@ -198,7 +182,7 @@ private fun CalmCaloriesApp(vm: AppViewModel) {
                         isDarkTheme = isDarkTheme,
                         onDarkThemeChange = vm::updateDarkTheme,
                         onExportBackup = { vm.handleExportClick(ctx) },
-                        onImportBackup = { vm.handleImportClick(ctx) }
+                        onImportBackup = { importLauncher.launch(arrayOf("application/zip", "application/octet-stream")) }
                     )
                 }
             }
@@ -213,11 +197,10 @@ private fun CalmCaloriesApp(vm: AppViewModel) {
             androidx.compose.material3.AlertDialog(
                 onDismissRequest = vm::dismissBackupDialogs,
                 title = { Text("Restore Backup?", fontWeight = FontWeight.Bold, color = BrandDark) },
-                text = { Text("A backup file was found on your Google Drive. This will download and restore it, replacing your current meal history. Proceed?") },
+                text = { Text("This will overwrite your current settings and meal history with the selected backup ZIP file. The app will restart automatically. Proceed?") },
                 confirmButton = {
                     androidx.compose.material3.TextButton(
                         onClick = {
-                            vm.dismissBackupDialogs()
                             vm.performImport(ctx)
                         }
                     ) {
@@ -227,48 +210,6 @@ private fun CalmCaloriesApp(vm: AppViewModel) {
                 dismissButton = {
                     androidx.compose.material3.TextButton(onClick = vm::dismissBackupDialogs) {
                         Text("CANCEL", color = TextMuted)
-                    }
-                },
-                containerColor = BrandCard
-            )
-        }
-
-        if (showBackupSuccess) {
-            androidx.compose.material3.AlertDialog(
-                onDismissRequest = vm::dismissBackupDialogs,
-                title = { Text("Backup Successful", fontWeight = FontWeight.Bold, color = BrandDark) },
-                text = { Text("Your settings and history have been backed up directly to your Google Drive App Data folder. It is safe from uninstalls and phone switches!") },
-                confirmButton = {
-                    androidx.compose.material3.TextButton(onClick = vm::dismissBackupDialogs) {
-                        Text("OK", color = Emerald, fontWeight = FontWeight.Bold)
-                    }
-                },
-                containerColor = BrandCard
-            )
-        }
-
-        if (showNoBackup) {
-            androidx.compose.material3.AlertDialog(
-                onDismissRequest = vm::dismissBackupDialogs,
-                title = { Text("No Backup Found", fontWeight = FontWeight.Bold, color = BrandDark) },
-                text = { Text("No previous NomAI backup file was found in your Google Drive cloud space.") },
-                confirmButton = {
-                    androidx.compose.material3.TextButton(onClick = vm::dismissBackupDialogs) {
-                        Text("OK", color = BrandDark, fontWeight = FontWeight.Bold)
-                    }
-                },
-                containerColor = BrandCard
-            )
-        }
-
-        if (backupErrorText != null) {
-            androidx.compose.material3.AlertDialog(
-                onDismissRequest = vm::dismissBackupDialogs,
-                title = { Text("Backup Error", fontWeight = FontWeight.Bold, color = BrandRed) },
-                text = { Text("An error occurred during the Google Drive backup operation:\n$backupErrorText\n\nNote: For development/testing, make sure your signing key's SHA-1 is registered in the Google Cloud Console.") },
-                confirmButton = {
-                    androidx.compose.material3.TextButton(onClick = vm::dismissBackupDialogs) {
-                        Text("OK", color = BrandDark, fontWeight = FontWeight.Bold)
                     }
                 },
                 containerColor = BrandCard

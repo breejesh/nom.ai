@@ -39,10 +39,6 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
-            excludes += "META-INF/INDEX.LIST"
-            excludes += "META-INF/DEPENDENCIES"
-            excludes += "META-INF/LICENSE"
-            excludes += "META-INF/NOTICE"
         }
     }
 
@@ -73,15 +69,6 @@ dependencies {
 
     // LiteRT-LM Kotlin Android API
     implementation("com.google.ai.edge.litertlm:litertlm-android:latest.release")
-
-    // Google Drive REST API and Google Auth
-    implementation("com.google.android.gms:play-services-auth:21.2.0")
-    implementation("com.google.api-client:google-api-client-android:2.6.0") {
-        exclude(group = "org.apache.httpcomponents", module = "httpclient")
-    }
-    implementation("com.google.apis:google-api-services-drive:v3-rev20240521-2.0.0") {
-        exclude(group = "org.apache.httpcomponents", module = "httpclient")
-    }
 
     debugImplementation("androidx.compose.ui:ui-tooling:1.7.8")
     debugImplementation("androidx.compose.ui:ui-test-manifest:1.7.8")

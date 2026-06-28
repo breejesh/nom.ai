@@ -187,10 +187,7 @@ private fun CalmCaloriesApp(vm: AppViewModel) {
                         suggestedCalories = suggestedCalories,
                         isDarkTheme = isDarkTheme,
                         onDarkThemeChange = vm::updateDarkTheme,
-                        onExportBackup = {
-                            val timeStamp = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.getDefault()).format(java.util.Date())
-                            exportLauncher.launch("nomai_backup_$timeStamp.zip")
-                        },
+                        onExportBackup = { exportLauncher.launch("nomai_backup.zip") },
                         onImportBackup = { importLauncher.launch(arrayOf("application/zip", "application/octet-stream")) }
                     )
                 }

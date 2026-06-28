@@ -26,8 +26,9 @@ Most calorie tracking apps are bloated, demand monthly subscriptions, show intru
 
 **NomAI is the antidote.** It is built on three core pillars:
 - 💡 **100% Free & Open-Source (FOSS):** No payment gateways, no locked features, no premium tiers. Free forever.
-- 🔒 **Local & Offline-First:** Powered by Google's on-device **Gemma-2B** models. All meal text analysis and vision scanning run entirely inside your phone. No internet connection needed, and zero data ever leaves your device.
-- 🔑 **Zero Logins, Zero Tracking:** No sign-up forms, no email collection, no cookies. Just open the app and start tracking.
+- 🔒 **Local & Offline-First:** Powered by Google's on-device **Gemma-2B** models. All meal text analysis and vision scanning run entirely inside your phone. No internet connection is needed, and zero data ever leaves your device.
+- 🌐 **No Backend Server:** There are no remote backend servers. We literally cannot track, collect, analyze, or do anything with your data because we have no access to it. Your meal history, settings, and physical metrics remain exclusively on your device's local database.
+- 🔑 **Zero Logins, Zero Tracking:** No sign-up forms, no email collection, no accounts. Just open the app and start tracking.
 
 ---
 

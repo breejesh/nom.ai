@@ -438,11 +438,17 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         return cal.timeInMillis
     }
 
+
+
     fun exportBackupToUri(context: Context, uri: Uri) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                // Force Room database checkpoint to write WAL contents to main file
-                AppDatabase.get(context).openHelper.writableDatabase.execSQL("PRAGMA wal_checkpoint(FULL)")
+                // Try database checkpoint but catch failures to avoid blocking backup
+                try {
+                    AppDatabase.get(context).openHelper.writableDatabase.execSQL("PRAGMA wal_checkpoint(FULL)")
+                } catch (ce: Exception) {
+                    android.util.Log.w("BackupRestore", "WAL checkpoint skipped/failed: ${ce.message}")
+                }
                 
                 val dbFile = context.getDatabasePath("calm_calories.db")
                 val dbShm = File(dbFile.parent, "${dbFile.name}-shm")
@@ -469,6 +475,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                     android.widget.Toast.makeText(context, "Backup exported successfully!", android.widget.Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
+                android.util.Log.e("BackupRestore", "Export failed", e)
                 withContext(Dispatchers.Main) {
                     android.widget.Toast.makeText(context, "Export failed: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
                 }
@@ -479,26 +486,24 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     fun importBackupFromUri(context: Context, uri: Uri) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                // Close database to unlock files
-                AppDatabase.get(context).close()
+                val cacheDir = context.cacheDir
+                val tempDb = File(cacheDir, "calm_calories_temp.db")
+                val tempShm = File(cacheDir, "calm_calories_temp.db-shm")
+                val tempWal = File(cacheDir, "calm_calories_temp.db-wal")
                 
-                val dbFile = context.getDatabasePath("calm_calories.db")
-                val dbShm = File(dbFile.parent, "${dbFile.name}-shm")
-                val dbWal = File(dbFile.parent, "${dbFile.name}-wal")
+                if (tempDb.exists()) tempDb.delete()
+                if (tempShm.exists()) tempShm.delete()
+                if (tempWal.exists()) tempWal.delete()
                 
-                // Clear old DB files
-                if (dbFile.exists()) dbFile.delete()
-                if (dbShm.exists()) dbShm.delete()
-                if (dbWal.exists()) dbWal.delete()
-                
+                var hasDb = false
                 context.contentResolver.openInputStream(uri)?.use { inputStream ->
                     ZipInputStream(inputStream).use { zipIn ->
                         var entry = zipIn.nextEntry
                         while (entry != null) {
                             val targetFile = when (entry.name) {
-                                "calm_calories.db" -> dbFile
-                                "calm_calories.db-shm" -> dbShm
-                                "calm_calories.db-wal" -> dbWal
+                                "calm_calories.db" -> { hasDb = true; tempDb }
+                                "calm_calories.db-shm" -> tempShm
+                                "calm_calories.db-wal" -> tempWal
                                 else -> null
                             }
                             if (targetFile != null) {
@@ -512,13 +517,45 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                     }
                 }
                 
+                if (!hasDb) {
+                    throw IllegalArgumentException("Invalid backup file: main database not found.")
+                }
+                
+                // Close database connection cleanly
+                AppDatabase.get(context).close()
+                AppDatabase.reset()
+                
+                val dbFile = context.getDatabasePath("calm_calories.db")
+                val dbShm = File(dbFile.parent, "${dbFile.name}-shm")
+                val dbWal = File(dbFile.parent, "${dbFile.name}-wal")
+                
+                // Overwrite files safely
+                fun copyFile(src: File, dest: File) {
+                    if (src.exists()) {
+                        src.inputStream().use { input ->
+                            dest.outputStream().use { output ->
+                                input.copyTo(output)
+                            }
+                        }
+                        src.delete()
+                    } else if (dest.exists()) {
+                        dest.delete()
+                    }
+                }
+                
+                copyFile(tempDb, dbFile)
+                copyFile(tempShm, dbShm)
+                copyFile(tempWal, dbWal)
+                
                 withContext(Dispatchers.Main) {
                     android.widget.Toast.makeText(context, "Backup restored successfully! Restarting...", android.widget.Toast.LENGTH_SHORT).show()
                     val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
                     intent?.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK)
                     context.startActivity(intent)
+                    android.os.Process.killProcess(android.os.Process.myPid())
                 }
             } catch (e: Exception) {
+                android.util.Log.e("BackupRestore", "Restore failed", e)
                 withContext(Dispatchers.Main) {
                     android.widget.Toast.makeText(context, "Import failed: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
                 }

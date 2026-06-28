@@ -343,9 +343,9 @@ fun SettingsScreen(
         // ── 4. Cloud Backups (Google Drive) ──
         SCard {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("GOOGLE DRIVE BACKUPS", fontSize = 9.sp, fontWeight = FontWeight.ExtraBold, color = TextMuted, letterSpacing = 1.5.sp)
+                Text("CLOUD BACKUPS", fontSize = 9.sp, fontWeight = FontWeight.ExtraBold, color = TextMuted, letterSpacing = 1.5.sp)
                 Text(
-                    "Back up your history and settings safely on your own Google Drive storage.",
+                    "Export your history and settings as a ZIP file. Save it to Google Drive (via the side menu) or local storage to secure your data.",
                     fontSize = 11.sp, color = TextMuted, lineHeight = 16.sp
                 )
                 Row(
@@ -362,7 +362,7 @@ fun SettingsScreen(
                             .clickable { onExportBackup() },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("EXPORT TO GDRIVE", fontSize = 10.sp, fontWeight = FontWeight.Black, color = BrandDark, letterSpacing = 1.sp)
+                        Text("EXPORT", fontSize = 10.sp, fontWeight = FontWeight.Black, color = BrandDark, letterSpacing = 1.sp)
                     }
                     Box(
                         modifier = Modifier
@@ -374,7 +374,7 @@ fun SettingsScreen(
                             .clickable { onImportBackup() },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("IMPORT FROM GDRIVE", fontSize = 10.sp, fontWeight = FontWeight.Black, color = BrandDark, letterSpacing = 1.sp)
+                        Text("IMPORT", fontSize = 10.sp, fontWeight = FontWeight.Black, color = BrandDark, letterSpacing = 1.sp)
                     }
                 }
             }

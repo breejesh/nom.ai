@@ -37,5 +37,9 @@ abstract class AppDatabase : RoomDatabase() {
                 ).addMigrations(MIGRATION_1_2).build().also { INSTANCE = it }
             }
         }
+
+        fun reset() {
+            INSTANCE = null
+        }
     }
 }

@@ -31,6 +31,17 @@ import java.net.URL
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.Scope
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
+import com.google.api.client.http.javanet.NetHttpTransport
+import com.google.api.client.json.gson.GsonFactory
+import com.google.api.services.drive.Drive
+import com.google.api.services.drive.model.File as DriveFile
+import com.google.api.client.http.FileContent
+import java.util.Collections
 
 class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = AppRepository(AppDatabase.get(application))
@@ -59,6 +70,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val _showPermissionRequest = MutableStateFlow(false)
     val showPermissionRequest = _showPermissionRequest.asStateFlow()
 
+    private val _showGoogleSignInPrompt = MutableStateFlow(false)
+    val showGoogleSignInPrompt = _showGoogleSignInPrompt.asStateFlow()
+
     private val _backupErrorText = MutableStateFlow<String?>(null)
     val backupErrorText = _backupErrorText.asStateFlow()
 
@@ -67,6 +81,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         _showBackupSuccess.value = false
         _showNoBackup.value = false
         _showPermissionRequest.value = false
+        _showGoogleSignInPrompt.value = false
         _backupErrorText.value = null
     }
 
@@ -464,56 +479,42 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
 
 
-    fun hasStoragePermission(context: Context): Boolean {
-        return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-            android.os.Environment.isExternalStorageManager()
-        } else {
-            androidx.core.content.ContextCompat.checkSelfPermission(
-                context,
-                android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-        }
-    }
-
-    fun requestStoragePermission(context: Context) {
-        try {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-                val intent = android.content.Intent(android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
-                    data = android.net.Uri.parse("package:${context.packageName}")
-                }
-                context.startActivity(intent)
-            } else {
-                android.widget.Toast.makeText(context, "Please grant storage permission in settings.", android.widget.Toast.LENGTH_LONG).show()
-            }
-        } catch (e: Exception) {
-            android.widget.Toast.makeText(context, "Failed to open settings: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
-        }
-    }
-
     fun handleExportClick(context: Context) {
-        if (!hasStoragePermission(context)) {
-            _showPermissionRequest.value = true
+        val account = GoogleSignIn.getLastSignedInAccount(context)
+        if (account == null) {
+            _showGoogleSignInPrompt.value = true
         } else {
-            performExport(context)
+            performExport(context, account)
         }
     }
 
     fun handleImportClick(context: Context) {
-        if (!hasStoragePermission(context)) {
-            _showPermissionRequest.value = true
+        val account = GoogleSignIn.getLastSignedInAccount(context)
+        if (account == null) {
+            _showGoogleSignInPrompt.value = true
         } else {
-            val downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
-            val backupFile = File(downloadsDir, "nomai_backup.zip")
-            if (backupFile.exists()) {
-                _showRestoreConfirm.value = true
-            } else {
-                _showNoBackup.value = true
-            }
+            queryBackupPresence(context, account)
         }
     }
 
-    private fun performExport(context: Context) {
+    private fun getDriveService(context: Context, account: GoogleSignInAccount): Drive {
+        val credential = GoogleAccountCredential.usingOAuth2(
+            context,
+            Collections.singleton("https://www.googleapis.com/auth/drive.appdata")
+        )
+        credential.selectedAccount = account.account
+        return Drive.Builder(
+            NetHttpTransport(),
+            GsonFactory.getDefaultInstance(),
+            credential
+        )
+            .setApplicationName("NomAI")
+            .build()
+    }
+
+    private fun performExport(context: Context, account: GoogleSignInAccount) {
         viewModelScope.launch(Dispatchers.IO) {
+            var tempFile: File? = null
             try {
                 try {
                     AppDatabase.get(context).openHelper.writableDatabase.execSQL("PRAGMA wal_checkpoint(FULL)")
@@ -525,16 +526,12 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 val dbShm = File(dbFile.parent, "${dbFile.name}-shm")
                 val dbWal = File(dbFile.parent, "${dbFile.name}-wal")
 
-                val downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
-                if (!downloadsDir.exists()) {
-                    downloadsDir.mkdirs()
-                }
-                val targetFile = File(downloadsDir, "nomai_backup.zip")
-                if (targetFile.exists()) {
-                    targetFile.delete()
+                tempFile = File(context.cacheDir, "nomai_backup_temp.zip")
+                if (tempFile.exists()) {
+                    tempFile.delete()
                 }
 
-                java.io.FileOutputStream(targetFile).use { outputStream ->
+                FileOutputStream(tempFile).use { outputStream ->
                     ZipOutputStream(outputStream).use { zipOut ->
                         fun addFileToZip(file: File, name: String) {
                             if (file.exists()) {
@@ -550,26 +547,95 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                         addFileToZip(dbWal, "calm_calories.db-wal")
                     }
                 }
-                
+
+                val driveService = getDriveService(context, account)
+                val queryResult = driveService.files().list()
+                    .setSpaces("appDataFolder")
+                    .setQ("name = 'nomai_backup.zip' and trashed = false")
+                    .setFields("files(id)")
+                    .execute()
+                val files = queryResult.files
+
+                val mediaContent = FileContent("application/zip", tempFile)
+                if (!files.isNullOrEmpty()) {
+                    val fileId = files[0].id
+                    driveService.files().update(fileId, null, mediaContent).execute()
+                } else {
+                    val fileMetadata = DriveFile().apply {
+                        name = "nomai_backup.zip"
+                        parents = Collections.singletonList("appDataFolder")
+                    }
+                    driveService.files().create(fileMetadata, mediaContent).execute()
+                }
+
                 withContext(Dispatchers.Main) {
                     _showBackupSuccess.value = true
                 }
             } catch (e: Exception) {
-                android.util.Log.e("BackupRestore", "Export failed", e)
+                android.util.Log.e("BackupRestore", "Google Drive Export failed", e)
                 withContext(Dispatchers.Main) {
-                    _backupErrorText.value = e.message ?: "Unknown error"
+                    _backupErrorText.value = e.message ?: "Google Drive connection error"
+                }
+            } finally {
+                tempFile?.delete()
+            }
+        }
+    }
+
+    private fun queryBackupPresence(context: Context, account: GoogleSignInAccount) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val driveService = getDriveService(context, account)
+                val queryResult = driveService.files().list()
+                    .setSpaces("appDataFolder")
+                    .setQ("name = 'nomai_backup.zip' and trashed = false")
+                    .setFields("files(id)")
+                    .execute()
+                val files = queryResult.files
+
+                withContext(Dispatchers.Main) {
+                    if (!files.isNullOrEmpty()) {
+                        _showRestoreConfirm.value = true
+                    } else {
+                        _showNoBackup.value = true
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("BackupRestore", "Google Drive Query failed", e)
+                withContext(Dispatchers.Main) {
+                    _backupErrorText.value = e.message ?: "Google Drive connection error"
                 }
             }
         }
     }
 
     fun performImport(context: Context) {
+        val account = GoogleSignIn.getLastSignedInAccount(context)
+        if (account == null) {
+            _showGoogleSignInPrompt.value = true
+            return
+        }
         viewModelScope.launch(Dispatchers.IO) {
+            var tempZipFile: File? = null
             try {
-                val downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
-                val backupFile = File(downloadsDir, "nomai_backup.zip")
-                if (!backupFile.exists()) {
-                    throw java.io.FileNotFoundException("Backup file 'nomai_backup.zip' not found in Downloads folder.")
+                val driveService = getDriveService(context, account)
+                val queryResult = driveService.files().list()
+                    .setSpaces("appDataFolder")
+                    .setQ("name = 'nomai_backup.zip' and trashed = false")
+                    .setFields("files(id)")
+                    .execute()
+                val files = queryResult.files
+
+                if (files.isNullOrEmpty()) {
+                    throw java.io.FileNotFoundException("Backup not found on Google Drive.")
+                }
+
+                val fileId = files[0].id
+                tempZipFile = File(context.cacheDir, "nomai_backup_downloaded.zip")
+                if (tempZipFile.exists()) tempZipFile.delete()
+
+                FileOutputStream(tempZipFile).use { outputStream ->
+                    driveService.files().get(fileId).executeMediaAndDownloadTo(outputStream)
                 }
 
                 val cacheDir = context.cacheDir
@@ -582,7 +648,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 if (tempWal.exists()) tempWal.delete()
 
                 var hasDb = false
-                backupFile.inputStream().use { inputStream ->
+                tempZipFile.inputStream().use { inputStream ->
                     ZipInputStream(inputStream).use { zipIn ->
                         var entry = zipIn.nextEntry
                         while (entry != null) {
@@ -604,7 +670,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 }
 
                 if (!hasDb) {
-                    throw IllegalArgumentException("Invalid backup file: main database not found inside zip.")
+                    throw IllegalArgumentException("Invalid backup: main database not found inside zip.")
                 }
 
                 AppDatabase.get(context).close()
@@ -641,8 +707,10 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: Exception) {
                 android.util.Log.e("BackupRestore", "Restore failed", e)
                 withContext(Dispatchers.Main) {
-                    _backupErrorText.value = e.message ?: "Unknown error"
+                    _backupErrorText.value = e.message ?: "Google Drive restore error"
                 }
+            } finally {
+                tempZipFile?.delete()
             }
         }
     }

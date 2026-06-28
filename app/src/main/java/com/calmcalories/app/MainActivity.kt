@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -100,7 +102,25 @@ private fun CalmCaloriesApp(vm: AppViewModel) {
     val showBackupSuccess by vm.showBackupSuccess.collectAsState()
     val showNoBackup by vm.showNoBackup.collectAsState()
     val showPermissionRequest by vm.showPermissionRequest.collectAsState()
+    val showGoogleSignInPrompt by vm.showGoogleSignInPrompt.collectAsState()
     val backupErrorText by vm.backupErrorText.collectAsState()
+
+    val signInLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        vm.dismissBackupDialogs()
+    }
+
+    LaunchedEffect(showGoogleSignInPrompt) {
+        if (showGoogleSignInPrompt) {
+            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .requestScopes(com.google.android.gms.common.api.Scope("https://www.googleapis.com/auth/drive.appdata"))
+                .build()
+            val signInClient = GoogleSignIn.getClient(ctx, gso)
+            signInLauncher.launch(signInClient.signInIntent)
+        }
+    }
 
     LaunchedEffect(isDarkTheme) {
         val activity = ctx as? ComponentActivity ?: return@LaunchedEffect
@@ -189,35 +209,11 @@ private fun CalmCaloriesApp(vm: AppViewModel) {
             AiProcessingDialog(processingPrompt, processingImageBytes)
         }
 
-        if (showPermissionRequest) {
-            androidx.compose.material3.AlertDialog(
-                onDismissRequest = vm::dismissBackupDialogs,
-                title = { Text("Storage Access Required", fontWeight = FontWeight.Bold, color = BrandDark) },
-                text = { Text("NomAI requires All Files Access to save and restore backups directly from your device's Downloads directory.") },
-                confirmButton = {
-                    androidx.compose.material3.TextButton(
-                        onClick = {
-                            vm.dismissBackupDialogs()
-                            vm.requestStoragePermission(ctx)
-                        }
-                    ) {
-                        Text("GRANT", color = Emerald, fontWeight = FontWeight.Bold)
-                    }
-                },
-                dismissButton = {
-                    androidx.compose.material3.TextButton(onClick = vm::dismissBackupDialogs) {
-                        Text("CANCEL", color = TextMuted)
-                    }
-                },
-                containerColor = BrandCard
-            )
-        }
-
         if (showRestoreConfirm) {
             androidx.compose.material3.AlertDialog(
                 onDismissRequest = vm::dismissBackupDialogs,
                 title = { Text("Restore Backup?", fontWeight = FontWeight.Bold, color = BrandDark) },
-                text = { Text("This will overwrite all current settings and meal history with the backup file. The app will restart automatically. Proceed?") },
+                text = { Text("A backup file was found on your Google Drive. This will download and restore it, replacing your current meal history. Proceed?") },
                 confirmButton = {
                     androidx.compose.material3.TextButton(
                         onClick = {
@@ -241,7 +237,7 @@ private fun CalmCaloriesApp(vm: AppViewModel) {
             androidx.compose.material3.AlertDialog(
                 onDismissRequest = vm::dismissBackupDialogs,
                 title = { Text("Backup Successful", fontWeight = FontWeight.Bold, color = BrandDark) },
-                text = { Text("Your data and settings have been backed up directly to: Downloads/nomai_backup.zip\n\nGoogle Drive will automatically sync this file if folder syncing is enabled.") },
+                text = { Text("Your settings and history have been backed up directly to your Google Drive App Data folder. It is safe from uninstalls and phone switches!") },
                 confirmButton = {
                     androidx.compose.material3.TextButton(onClick = vm::dismissBackupDialogs) {
                         Text("OK", color = Emerald, fontWeight = FontWeight.Bold)
@@ -255,7 +251,7 @@ private fun CalmCaloriesApp(vm: AppViewModel) {
             androidx.compose.material3.AlertDialog(
                 onDismissRequest = vm::dismissBackupDialogs,
                 title = { Text("No Backup Found", fontWeight = FontWeight.Bold, color = BrandDark) },
-                text = { Text("Ensure the backup file 'nomai_backup.zip' is placed inside your phone's public 'Downloads' directory first.") },
+                text = { Text("No previous NomAI backup file was found in your Google Drive cloud space.") },
                 confirmButton = {
                     androidx.compose.material3.TextButton(onClick = vm::dismissBackupDialogs) {
                         Text("OK", color = BrandDark, fontWeight = FontWeight.Bold)
@@ -269,7 +265,7 @@ private fun CalmCaloriesApp(vm: AppViewModel) {
             androidx.compose.material3.AlertDialog(
                 onDismissRequest = vm::dismissBackupDialogs,
                 title = { Text("Backup Error", fontWeight = FontWeight.Bold, color = BrandRed) },
-                text = { Text("An error occurred during the backup operation:\n$backupErrorText") },
+                text = { Text("An error occurred during the Google Drive backup operation:\n$backupErrorText\n\nNote: For development/testing, make sure your signing key's SHA-1 is registered in the Google Cloud Console.") },
                 confirmButton = {
                     androidx.compose.material3.TextButton(onClick = vm::dismissBackupDialogs) {
                         Text("OK", color = BrandDark, fontWeight = FontWeight.Bold)

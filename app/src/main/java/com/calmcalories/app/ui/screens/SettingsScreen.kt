@@ -345,7 +345,7 @@ fun SettingsScreen(
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("CLOUD BACKUPS", fontSize = 9.sp, fontWeight = FontWeight.ExtraBold, color = TextMuted, letterSpacing = 1.5.sp)
                 Text(
-                    "Export your history and settings as a ZIP file. Save it to Google Drive (via the side menu) or local storage to secure your data.",
+                    "Back up your history and settings directly and privately to your Google Drive account, allowing seamless restore when switching devices.",
                     fontSize = 11.sp, color = TextMuted, lineHeight = 16.sp
                 )
                 Row(

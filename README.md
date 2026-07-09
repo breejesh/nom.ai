@@ -50,27 +50,39 @@ NomAI is designed for **casual users** looking to start their fitness journey wi
 ### Theme Adaptability
 Here is how the clean, minimalist layout shifts between the warm off-white light theme and the midnight-espresso dark theme:
 
-| Light Mode Dashboard | Dark Mode Dashboard |
-| :---: | :---: |
-| <img src="doc-images/home-light.png" width="280" alt="Light Dashboard"> | <img src="doc-images/home-dark.png" width="280" alt="Dark Dashboard"> |
+<p align="left">
+  <img src="doc-images/home-light.png" width="260" alt="Light Dashboard">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="doc-images/home-dark.png" width="260" alt="Dark Dashboard">
+</p>
 
 ---
 
 ### The Smart Adding Journey
 Tracking a meal is fully local: describe it naturally or snap a photo, review the extracted elements, and log.
 
-| Select Input Method | Describe with AI | Snap with Vision | Meal Breakdown |
-| :---: | :---: | :---: | :---: |
-| ![Select Input Method](doc-images/input-methods.png) | ![Describe with AI](doc-images/pompt-add.png) | ![Snap with Vision](doc-images/image-add.png) | ![Meal Breakdown](doc-images/meal-breakdown.png) |
+<p align="left">
+  <img src="doc-images/input-methods.png" width="180" alt="Select Input Method">
+  &nbsp;&nbsp;
+  <img src="doc-images/pompt-add.png" width="180" alt="Describe with AI">
+  &nbsp;&nbsp;
+  <img src="doc-images/image-add.png" width="180" alt="Snap with Vision">
+  &nbsp;&nbsp;
+  <img src="doc-images/meal-breakdown.png" width="180" alt="Meal Breakdown">
+</p>
 
 ---
 
 ### Insights, Journal & Settings
 Dive into weekly charts, browse your history, or customize your experience offline.
 
-| Dashboard Analytics | Meal Journal | App Settings |
-| :---: | :---: | :---: |
-| ![Dashboard Analytics](doc-images/dashboard.png) | ![Meal Journal](doc-images/journal.png) | ![App Settings](doc-images/settings.png) |
+<p align="center">
+  <img src="doc-images/dashboard.png" width="240" alt="Dashboard Analytics">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="doc-images/journal.png" width="240" alt="Meal Journal">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="doc-images/settings.png" width="240" alt="App Settings">
+</p>
 
 ---
 

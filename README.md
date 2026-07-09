@@ -59,9 +59,9 @@ Here is how the clean, minimalist layout shifts between the warm off-white light
 ### The Smart Adding Journey
 Tracking a meal is fully local: describe it naturally or snap a photo, review the extracted elements, and log.
 
-| Describe with AI | Snap with Vision |
-| :---: | :---: |
-| ![Describe with AI](doc-images/pompt-add.png) | ![Snap with Vision](doc-images/image-add.png) |
+| Describe with AI | Snap with Vision | Meal Breakdown |
+| :---: | :---: | :---: |
+| ![Describe with AI](doc-images/pompt-add.png) | ![Snap with Vision](doc-images/image-add.png) | ![Meal Breakdown](doc-images/meal-breakdown.png) |
 
 ---
 

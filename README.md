@@ -1,8 +1,8 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="screenshots/logo-dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset="screenshots/logo-light.svg">
-    <img src="screenshots/logo-light.svg" width="100" height="100" alt="NomAI Logo">
+    <source media="(prefers-color-scheme: dark)" srcset="doc-images/logo-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="doc-images/logo-light.svg">
+    <img src="doc-images/logo-light.svg" width="100" height="100" alt="NomAI Logo">
   </picture>
 </p>
 
@@ -24,19 +24,19 @@
 
 ---
 
-### 🛡️ Why NomAI?
+### Why NomAI?
 
 Most calorie tracking apps are bloated, demand monthly subscriptions, show intrusive ads, and sell your private eating habits to third-party ad networks.
 
 **NomAI is the antidote.** It is built on three core pillars:
-- 💡 **100% Free & Open-Source (FOSS):** No payment gateways, no locked features, no premium tiers. Free forever.
-- 🔒 **Local & Offline-First:** Powered by Google's on-device **Gemma-2B** models. All meal text analysis and vision scanning run entirely inside your phone. No internet connection is needed, and zero data ever leaves your device.
-- 🌐 **No Backend Server:** There are no remote backend servers. We literally cannot track, collect, analyze, or do anything with your data because we have no access to it. Your meal history, settings, and physical metrics remain exclusively on your device's local database.
-- 🔑 **Zero Logins, Zero Tracking:** No sign-up forms, no email collection, no accounts. Just open the app and start tracking.
+- **100% Free & Open-Source (FOSS):** No payment gateways, no locked features, no premium tiers. Free forever.
+- **Local & Offline-First:** Powered by Google's on-device **Gemma-2B** models. All meal text analysis and vision scanning run entirely inside your phone. No internet connection is needed, and zero data ever leaves your device.
+- **No Backend Server:** There are no remote backend servers. We literally cannot track, collect, analyze, or do anything with your data because we have no access to it. Your meal history, settings, and physical metrics remain exclusively on your device's local database.
+- **Zero Logins, Zero Tracking:** No sign-up forms, no email collection, no accounts. Just open the app and start tracking.
 
 ---
 
-### 🎯 Target Audience: Mindful & Casual Tracking
+### Target Audience: Mindful & Casual Tracking
 
 NomAI is designed for **casual users** looking to start their fitness journey with a low-friction, zero-dependency habit.
 
@@ -45,61 +45,58 @@ NomAI is designed for **casual users** looking to start their fitness journey wi
 
 ---
 
-## 📸 Screen Showcases
-
-> [!TIP]
-> Place your actual app mockups inside the `screenshots/` directory using the filenames specified below to display them in this layout:
+## Screen Showcases
 
 ### Theme Adaptability
 Here is how the clean, minimalist layout shifts between the warm off-white light theme and the midnight-espresso dark theme:
 
 | Light Mode Dashboard | Dark Mode Dashboard |
 | :---: | :---: |
-| ![Light Dashboard](screenshots/dashboard_light.png) | ![Dark Dashboard](screenshots/dashboard_dark.png) |
+| ![Light Dashboard](doc-images/home-light.png) | ![Dark Dashboard](doc-images/home-dark.png) |
 
 ---
 
 ### The Smart Adding Journey
 Tracking a meal is fully local: describe it naturally or snap a photo, review the extracted elements, and log.
 
-| 1. Describe or Snap | 2. Review Extracted Macros |
+| Describe with AI | Snap with Vision |
 | :---: | :---: |
-| ![Describe/Snap Dialog](screenshots/add_with_ai.png) | ![Extracted Meal Details](screenshots/extracted_details.png) |
+| ![Describe with AI](doc-images/pompt-add.png) | ![Snap with Vision](doc-images/image-add.png) |
 
 ---
 
-### Insights & Settings
-Dive into weekly charts or customize your experience offline.
+### Insights, Journal & Settings
+Dive into weekly charts, browse your history, or customize your experience offline.
 
-| 3. Dynamic Stats (Calories / Macros) | 4. Appearance Controls |
-| :---: | :---: |
-| ![Stats Parameters](screenshots/stats_dashboard.png) | ![Settings Theme Toggle](screenshots/settings_appearance.png) |
+| Dashboard Analytics | Meal Journal | App Settings |
+| :---: | :---: | :---: |
+| ![Dashboard Analytics](doc-images/dashboard.png) | ![Meal Journal](doc-images/journal.png) | ![App Settings](doc-images/settings.png) |
 
 ---
 
-## ✨ Key Features
+## Key Features
 
-- 🤖 **Local Gemma-2B AI Extractor**
+- **Local Gemma-2B AI Extractor**
   - Fully private, local extraction of food items, portion sizes, and calories from natural descriptions (e.g. *"2 scrambled eggs on whole wheat toast"*).
   - Mathematical macro alignment: automatically balances calorie outputs against protein (4 kcal/g), carbs (4 kcal/g), and fats (9 kcal/g).
-- 📸 **On-Device Vision Scan**
+- **On-Device Vision Scan**
   - Snap a meal photo or select from your library. The local Gemma model extracts portion estimates and nutrition offline.
-- 📐 **Scientific Deficit Calculator**
+- **Scientific Deficit Calculator**
   - Estimates your daily BMR/TDEE goals using the Mifflin-St Jeor equation and custom physical activity multipliers.
-- 📊 **Intelligence Dashboard**
+- **Intelligence Dashboard**
   - Dynamic parameter switching in Stats (Calories, Protein, Carbs, Fat) using a custom popup selector.
   - Interactive week-by-week bar charts, hourly daily charts, and daily compliance calendars.
-- 🎨 **Minimalist Design & Dark Mode**
+- **Minimalist Design & Dark Mode**
   - Warm minimalist typography and dynamic light/dark system themes.
   - Segmented Day/Night controller in settings with WbSunny and NightsStay icon controls.
-- 🔐 **Guaranteed Privacy & Data Ownership**
+- **Guaranteed Privacy & Data Ownership**
   - Offline-first execution. No sign-ups, no tracking cookies, and zero background network uploads.
   - **Auto Cloud Backups:** Seamlessly integrates with Android's system backup service, securing your history inside your personal Google Drive storage space.
   - **On-Demand Drive Sync:** Export or import compressed backup files (`.zip`) directly to/from Google Drive or local storage on-demand.
 
 ---
 
-## 🛠️ Build & Installation
+## Build & Installation
 
 ### Prerequisites
 - Android Studio Ladybug (or newer)
@@ -108,7 +105,7 @@ Dive into weekly charts or customize your experience offline.
 ### Setup
 1. Clone the repository:
    ```bash
-   git clone https://github.com/breejesh/nomai-android.git
+   git clone https://github.com/breejesh/nom.ai.git
    ```
 2. Open the project in Android Studio.
 3. Sync Gradle and build the project.

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="screenshots/logo.png" width="100" height="100" alt="NomAI Logo">
+  <img src="screenshots/logo.svg" width="100" height="100" alt="NomAI Logo">
 </p>
 
 <h1 align="center">NomAI</h1>

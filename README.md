@@ -52,7 +52,7 @@ Here is how the clean, minimalist layout shifts between the warm off-white light
 
 | Light Mode Dashboard | Dark Mode Dashboard |
 | :---: | :---: |
-| <img src="doc-images/home-light.png" width="300" alt="Light Dashboard"> | <img src="doc-images/home-dark.png" width="300" alt="Dark Dashboard"> |
+| <img src="doc-images/home-light.png" width="280" alt="Light Dashboard"> | <img src="doc-images/home-dark.png" width="280" alt="Dark Dashboard"> |
 
 ---
 

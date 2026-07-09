@@ -1,17 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="108" height="108" viewBox="0 0 24 24">
-    <!-- Background Circle (Off-white) -->
+    <!-- Outer accent ring (White / Light) -->
     <path
-        fill="#FAF8F5"
-        d="M12,12m-11,0a11,11 0,1 1,22 0a11,11 0,1 1,-22 0" />
-    <!-- Outer accent ring -->
-    <path
-        stroke="#E5DFD4"
+        stroke="#FAF8F5"
         stroke-width="0.3"
         fill="none"
         d="M12,12m-9.5,0a9.5,9.5 0,1 1,19 0a9.5,9.5 0,1 1,-19 0" />
-    <!-- Monogram 'N' (Bowl/Plate/Smile curve) -->
+    <!-- Monogram 'N' (Bowl/Plate/Smile curve) (White / Light) -->
     <path
-        stroke="#1D1916"
+        stroke="#FAF8F5"
         stroke-width="2"
         stroke-linecap="round"
         stroke-linejoin="round"

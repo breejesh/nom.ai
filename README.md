@@ -1,5 +1,9 @@
 <p align="center">
-  <img src="screenshots/logo.svg" width="100" height="100" alt="NomAI Logo">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="screenshots/logo-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="screenshots/logo-light.svg">
+    <img src="screenshots/logo-light.svg" width="100" height="100" alt="NomAI Logo">
+  </picture>
 </p>
 
 <h1 align="center">NomAI</h1>

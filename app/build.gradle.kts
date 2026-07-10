@@ -9,29 +9,22 @@ android {
     namespace = "com.calmcalories.app"
     compileSdk = 35
 
+    val keystoreFilePath = System.getenv("KEYSTORE_FILE_PATH") ?: project.findProperty("RELEASE_STORE_FILE")?.toString()
+    val keystorePassword = System.getenv("KEYSTORE_PASSWORD") ?: project.findProperty("RELEASE_STORE_PASSWORD")?.toString()
+    val keyAlias = System.getenv("KEY_ALIAS") ?: project.findProperty("RELEASE_KEY_ALIAS")?.toString()
+    val keyPassword = System.getenv("KEY_PASSWORD") ?: project.findProperty("RELEASE_KEY_PASSWORD")?.toString()
+
+    val keystoreFile = if (!keystoreFilePath.isNullOrEmpty()) file(keystoreFilePath) else null
+    val hasKeystore = keystoreFile != null && keystoreFile.exists()
+    val hasCredentials = !keystorePassword.isNullOrEmpty() && !keyAlias.isNullOrEmpty() && !keyPassword.isNullOrEmpty()
+
     signingConfigs {
         create("release") {
-            val keystoreFilePath = System.getenv("KEYSTORE_FILE_PATH") ?: project.findProperty("RELEASE_STORE_FILE")?.toString()
-            val keystorePassword = System.getenv("KEYSTORE_PASSWORD") ?: project.findProperty("RELEASE_STORE_PASSWORD")?.toString()
-            val keyAlias = System.getenv("KEY_ALIAS") ?: project.findProperty("RELEASE_KEY_ALIAS")?.toString()
-            val keyPassword = System.getenv("KEY_PASSWORD") ?: project.findProperty("RELEASE_KEY_PASSWORD")?.toString()
-
-            val keystoreFile = if (!keystoreFilePath.isNullOrEmpty()) file(keystoreFilePath) else null
-            val hasKeystore = keystoreFile != null && keystoreFile.exists()
-            val hasCredentials = !keystorePassword.isNullOrEmpty() && !keyAlias.isNullOrEmpty() && !keyPassword.isNullOrEmpty()
-
             if (hasKeystore && hasCredentials) {
                 storeFile = keystoreFile
                 storePassword = keystorePassword
                 this.keyAlias = keyAlias
                 this.keyPassword = keyPassword
-            } else {
-                // Fallback to debug configuration so build doesn't fail
-                val debugConfig = getByName("debug")
-                storeFile = debugConfig.storeFile
-                storePassword = debugConfig.storePassword
-                this.keyAlias = debugConfig.keyAlias
-                this.keyPassword = debugConfig.keyPassword
             }
         }
     }
@@ -51,7 +44,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("release")
+            if (hasKeystore && hasCredentials) {
+                signingConfig = signingConfigs.getByName("release")
+            } else {
+                signingConfig = signingConfigs.getByName("debug")
+            }
         }
     }
 

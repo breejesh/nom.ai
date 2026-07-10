@@ -9,12 +9,35 @@ android {
     namespace = "com.calmcalories.app"
     compileSdk = 35
 
+    signingConfigs {
+        create("release") {
+            val keystoreFilePath = System.getenv("KEYSTORE_FILE_PATH") ?: project.findProperty("RELEASE_STORE_FILE")?.toString()
+            val keystorePassword = System.getenv("KEYSTORE_PASSWORD") ?: project.findProperty("RELEASE_STORE_PASSWORD")?.toString()
+            val keyAlias = System.getenv("KEY_ALIAS") ?: project.findProperty("RELEASE_KEY_ALIAS")?.toString()
+            val keyPassword = System.getenv("KEY_PASSWORD") ?: project.findProperty("RELEASE_KEY_PASSWORD")?.toString()
+
+            if (keystoreFilePath != null && keystorePassword != null && keyAlias != null && keyPassword != null) {
+                storeFile = file(keystoreFilePath)
+                storePassword = keystorePassword
+                this.keyAlias = keyAlias
+                this.keyPassword = keyPassword
+            } else {
+                // Fallback to debug configuration so build doesn't fail
+                val debugConfig = getByName("debug")
+                storeFile = debugConfig.storeFile
+                storePassword = debugConfig.storePassword
+                this.keyAlias = debugConfig.keyAlias
+                this.keyPassword = debugConfig.keyPassword
+            }
+        }
+    }
+
     defaultConfig {
         applicationId = "com.calmcalories.app"
         minSdk = 28
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = project.findProperty("versionCode")?.toString()?.toIntOrNull() ?: 1
+        versionName = project.findProperty("versionName")?.toString() ?: "1.0.0"
     }
 
     buildTypes {
@@ -24,6 +47,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 

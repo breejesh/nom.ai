@@ -1,0 +1,80 @@
+name: Build & Publish Release APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Signed APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Extract Version Info
+        id: version_info
+        run: |
+          # Extract tag name (e.g. v1.2.3 -> 1.2.3)
+          TAG_NAME="${{ github.ref_name }}"
+          VERSION_NAME="${TAG_NAME#v}"
+          echo "VERSION_NAME=${VERSION_NAME}" >> $GITHUB_ENV
+          
+          # Generate versionCode from tag name (e.g. 1.2.3 -> 10203)
+          IFS='.' read -r major minor patch <<< "$VERSION_NAME"
+          major=${major:-0}
+          minor=${minor:-0}
+          patch=${patch:-0}
+          VERSION_CODE=$((major * 10000 + minor * 100 + patch))
+          echo "VERSION_CODE=${VERSION_CODE}" >> $GITHUB_ENV
+          echo "Computed Version Name: $VERSION_NAME, Version Code: $VERSION_CODE"
+
+      - name: Decode Keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 --decode > app/release-keystore.jks
+            echo "KEYSTORE_FILE_PATH=release-keystore.jks" >> $GITHUB_ENV
+          else
+            echo "No keystore secret found, build will fallback to debug signing"
+          fi
+
+      - name: Build Release APK
+        env:
+          KEYSTORE_FILE_PATH: "release-keystore.jks"
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          ./gradlew assembleRelease -PversionCode=${{ env.VERSION_CODE }} -PversionName=${{ env.VERSION_NAME }}
+
+      - name: Rename APK
+        run: |
+          mkdir -p release-artifacts
+          cp app/build/outputs/apk/release/app-release.apk release-artifacts/nom-ai-${{ env.VERSION_NAME }}.apk
+          
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-artifacts/nom-ai-${{ env.VERSION_NAME }}.apk
+          name: Release ${{ github.ref_name }}
+          tag_name: ${{ github.ref }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
